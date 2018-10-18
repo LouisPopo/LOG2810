@@ -1,8 +1,6 @@
-from functions import my_function
+from functions import *
 
 def main():
-    my_function("Hello World")
-    file = open("textTest.txt","r")
-    print (file.read())
+    creerGraphe("centresLocaux.txt")
 
 main()
