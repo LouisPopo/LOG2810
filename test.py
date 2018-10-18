@@ -1,5 +1,4 @@
-def my_function(word):
-    print(word)
+from functions import *
 
 def main():
     my_function("Hello World")
