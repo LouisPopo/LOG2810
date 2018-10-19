@@ -1,14 +1,11 @@
-from functions import creerGraphe
+from graphesFunctions import creerGraphe, lireGraphe, plusCourtChemin
 
+GrapheCLSCs = None
 
 def main():
-    hasChargingDock, CLSC = creerGraphe("centresLocaux.txt")
-    #print(hasChargingDock)
-    #print(CLSC)
-
-    for nodes in CLSC:
-        print(nodes)
-        print (CLSC[nodes])
-
+    hasChargingDock, GrapheCLSCs = creerGraphe("centresLocaux.txt")
+    #lireGraphe(GrapheCLSCs)
+    plusCourtChemin()
+    
 
 main()
