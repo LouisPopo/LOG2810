@@ -1,25 +1,33 @@
-BREAK_LINE = "\n"
+END_OF_LINE = "\n"
 EMPTY_LINE = "\n\n"
 
-def readFile(file):
+def creerGraphe(fileName):
     
     hasChargingDock = dict()
     CLSC = dict()
 
-
-    f = open(file,"r").read()
+    file = open(fileName,"r").read()
     
-    bornesCLSC,noeuds = f.split(EMPTY_LINE)
+    bornesCLSC,noeuds = file.split(EMPTY_LINE)
 
-    listBornes = bornesCLSC.split(BREAK_LINE)
-    listNoeuds = noeuds.split(BREAK_LINE)
+    listBornes = bornesCLSC.split(END_OF_LINE)
+    listNoeuds = noeuds.split(END_OF_LINE)
 
     for line in listBornes:
         numero, hasCharge = line.split(',')
-        CLSC[numero] = hasCharge
+        hasChargingDock[numero] = hasCharge
 
     for line in listNoeuds:
-        # remplir dictionnaire CLSC
+        nodeA, nodeB, cost = line.split(',')
+        
+        if nodeA not in CLSC:
+            CLSC[nodeA] = {}
+        if nodeB not in CLSC:
+            CLSC[nodeB] = {}
+        
+        CLSC[nodeA][nodeB] = cost
+        CLSC[nodeB][nodeA] = cost
+        
 
-
-    return (hasChargingDock,CLSC)
+        
+    return hasChargingDock,CLSC
