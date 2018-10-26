@@ -1,26 +1,20 @@
-from graphesFunctions import creerGraphe, lireGraphe, plusCourtChemin
+from graphesFunctions import creerGraphe, lireGraphe, plusCourtChemin,dijkstraPath
 from menu import menu
-from Test import PlusCourtCheminTest
 
 GrapheCLSCs = None
 
 fakeDict = {
-    '1' : {'2':1,'4':3},
-    '2' : {'1':1,'3':5,'5':4},
-    '3' : {'2':2, '4':3},
-    '4' : {'1':3,'5':4},
-    '5' : {'2':4,'4':4}
+    'A' : {'B':1,'D':5},
+    'B' : {'A':1,'C':5,'E':1},
+    'C' : {'B':5, 'D':3},
+    'D' : {'A':3,'E':4},
+    'E' : {'B':4,'D':1}
 }
 
-def main() {
-
-
+def main():
     hasChargingDock, GrapheCLSCs = creerGraphe("centresLocaux.txt")
     #lireGraphe(GrapheCLSCs)
-    #plusCourtChemin()
+    print(dijkstraPath(fakeDict,'A','D'))
     #menu()
-    PlusCourtCheminTest(GrapheCLSCs)
-    
-}
     
 main()
