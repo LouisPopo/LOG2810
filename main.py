@@ -1,9 +1,6 @@
 from graphesFunctions import creerGraphe, lireGraphe, plusCourtChemin
-<<<<<<< HEAD
 from menu import menu
 from Test import PlusCourtCheminTest
-=======
->>>>>>> 22276de2c98608efd11163e39722882d260055cf
 
 GrapheCLSCs = None
 
@@ -15,19 +12,12 @@ fakeDict = {
     '5' : {'2':4,'4':4}
 }
 
-<<<<<<< HEAD
     hasChargingDock, GrapheCLSCs = creerGraphe("centresLocaux.txt")
     #lireGraphe(GrapheCLSCs)
     #plusCourtChemin()
     #menu()
     PlusCourtCheminTest(GrapheCLSCs)
     
-=======
-def main():
-    hasChargingDock, GrapheCLSCs = creerGraphe("centresLocaux.txt")
-    #lireGraphe(GrapheCLSCs)
-    plusCourtChemin(fakeDict)
->>>>>>> 22276de2c98608efd11163e39722882d260055cf
 
     
 main()
