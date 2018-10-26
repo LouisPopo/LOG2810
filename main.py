@@ -12,12 +12,15 @@ fakeDict = {
     '5' : {'2':4,'4':4}
 }
 
+def main() {
+
+
     hasChargingDock, GrapheCLSCs = creerGraphe("centresLocaux.txt")
     #lireGraphe(GrapheCLSCs)
     #plusCourtChemin()
     #menu()
     PlusCourtCheminTest(GrapheCLSCs)
     
-
+}
     
 main()
