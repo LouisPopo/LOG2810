@@ -35,10 +35,7 @@ def lireGraphe(graphe):
 
 def plusCourtChemin(typeParcours = None, origine = '1', destination = '8'):
     visited, parcours = list(), list()
-    unvisited = dict()
-
-    for key in CLSCs:
-        unvisited[key] = float('inf')                                   #mets la distance a 'Infini' pour tous les points
+    unvisited = {node: float('inf') for node in CLSCs} #mets la distance a 'Infini' pour tous les points
 
     unvisited[origine] = 0                                              #mets la distance a '0' pour le point de depart
 
@@ -46,15 +43,15 @@ def plusCourtChemin(typeParcours = None, origine = '1', destination = '8'):
     print(unvisited)
 
     for i in range(0,2) :
-        closestNeighbor = min(unvisited, key= lambda x: unvisited.get(x))   #Trouve le noeud avec la plus petite distance parmis les unvisited. C'est 'origine' la 1ere fois
+        current = min(unvisited, key= lambda x: unvisited.get(x))   #Trouve le noeud avec la plus petite distance parmis les unvisited. C'est 'origine' la 1ere fois
         print(str(i) + " EME FOIS ")
-        print(closestNeighbor)
-        visited.append(closestNeighbor)                                     #Ajoute le noeud trouve au CLSC visites
-        del unvisited[closestNeighbor]                                      #L'enleve des CLSCS non visites
-        for neighbor in GrapheCLSCs[closestNeighbor]:                           #Cherche parmis les voisins de ce noeud
+        print(current)
+        visited.append(current)                                     #Ajoute le noeud trouve au CLSC visites
+        del unvisited[current]                                      #L'enleve des CLSCS non visites
+        for neighbor in GrapheCLSCs[current]:                           #Cherche parmis les voisins de ce noeud
             if neighbor not in visited:                                             #Si on a pas deja visite le voisin
-                if GrapheCLSCs[closestNeighbor][neighbor] < unvisited[neighbor]:        #Si la distance entre le noeud et son voisin est plus petite que celle qui avait avant  
-                    unvisited[neighbor] = GrapheCLSCs[closestNeighbor][neighbor]        #On la change
+                if GrapheCLSCs[current][neighbor] < unvisited[neighbor]:        #Si la distance entre le noeud et son voisin est plus petite que celle qui avait avant  
+                    unvisited[neighbor] = GrapheCLSCs[current][neighbor]        #On la change
         print (unvisited)
         
     
