@@ -1,9 +1,15 @@
 import collections
+from enum import Enum
 
 END_OF_LINE = "\n"
 EMPTY_LINE = "\n\n"
+BATTERIE_PLEINE = 100
 
-CLSCs, GrapheCLSCs = dict(), dict()
+class Vehicule(Enum):
+    NINH = 'NI-NH'
+    LIion = 'LI-ion'
+
+BorneRecharge, GrapheCLSCs = dict(), dict()
 
 def creerGraphe(fileName):
     file = open(fileName,"r").read()
@@ -15,7 +21,7 @@ def creerGraphe(fileName):
 
     for line in listBornes:
         numero, hasCharge = line.split(',')
-        CLSCs[numero] = hasCharge
+        BorneRecharge[numero] = hasCharge
 
     for line in listArcs:
         nodeA, nodeB, cost = line.split(',')
@@ -28,74 +34,53 @@ def creerGraphe(fileName):
         GrapheCLSCs[nodeA][nodeB] = int(cost)
         GrapheCLSCs[nodeB][nodeA] = int(cost)
 
-    return CLSCs,GrapheCLSCs
+    return BorneRecharge,GrapheCLSCs
 
 def lireGraphe(graphe):
     for node in graphe:
         print(node)
         print (graphe[node])
+   
+battery_cost = {
+    Vehicule.NINH : {
+        'faible_risque' : (6/60),
+        'moyen_risque' : (12/60),
+        'haut_risque' : (48/60)
+    },
 
-def plusCourtChemin(graphe, typeParcours = None, origine = 'A', destination = 'E'):
+    Vehicule.LIion : {
+        'faible_risque' : (5/60),
+        'moyen_risque' : (10/60),
+        'haut_risque' : (30/60)
+    }
+}
 
-    print(graphe)
+def plusCourtChemin(transport_category, origine, destination):
+    path, path_time = dijkstraPath(GrapheCLSCs, origine, destination)
     
-    visited, parcours = list(), list()
-    unvisited = {node: float('inf') for node in graphe} #mets la distance a 'Infini' pour tous les points
-    dist = dict()
-    dist[origine] = 0
+    time_to_consume_80_NINH = 80/battery_cost[Vehicule.NINH][transport_category]
+    battery_finale = BATTERIE_PLEINE - battery_cost[Vehicule.NINH][transport_category]*path_time
+
+    print("time_to_consume_80_NINH = " + str(time_to_consume_80_NINH))
+
+    if(path_time > time_to_consume_80_NINH):
+        #sinon on va parcourir le chmin a lenvers a partir du moment ou la batterie est en dessous de 20 pour trouver la premiere borne de recharge
+        for clsc,time_to_node in path[::-1]:
+            if (time_to_node < time_to_consume_80_NINH and BorneRecharge[clsc]):
+                print("On recharge a la borne : " + str(clsc))
+                time_recharge_destination = path_time - time_to_node
+                battery_finale = BATTERIE_PLEINE - battery_cost[Vehicule.NINH][transport_category]*time_recharge_destination
+                path_time += 120
+                break
     
-
-    current = origine
-    currentTime = 0
-    unvisited[origine] = currentTime                                             #mets la distance a '0' pour le point de depart
+    return[path, path_time, Vehicule.NINH, battery_finale]
 
 
-    while unvisited:
-        print("--Unvisited--")
-        print(unvisited)
-        print("Visited")
-        print(visited)
-        # 3. Select the unvisited node with the smallest distance, 
-        # it's origin the first time.
-        current = min(unvisited, key= lambda cost: unvisited.get(cost))  
 
-        # 4. Find unvisited neighbors for the current node 
-        # and calculate their distances through the current node.
-
-        for neighbour in graphe[current]:
-            if neighbour in unvisited:
-                newCost = graphe[current][neighbour] + currentTime
-
-                # Compare the newly calculated distance to the assigned 
-                # and save the smaller one.
-
-                if newCost < unvisited[neighbour]:
-                    unvisited[neighbour] = newCost
-
-        # 5. Mark the current node as visited 
-        # and remove it from the unvisited set.
-
-        visited.append(current)
-        del unvisited[current] 
-
-    print(visited)
-    print(dist)
-        
-        
-    '''
-        c
-
-                                    #Ajoute le noeud trouve au CLSC visites
-                                    #L'enleve des CLSCS non visites
-        for neighbor in GrapheCLSCs[current]:                           #Cherche parmis les voisins de ce noeud
-            if neighbor not in visited:                                             #Si on a pas deja visite le voisin
-                if GrapheCLSCs[current][neighbor] < unvisited[neighbor]:        #Si la distance entre le noeud et son voisin est plus petite que celle qui avait avant  
-                    unvisited[neighbor] = GrapheCLSCs[current][neighbor]        #On la change
-        '''
-    
-def dijkstraPath(graphe, origin = 'A', destination = 'E'):
+# returns a tuple (set of nodes to go through, total time)
+def dijkstraPath(graphe, origin, destination):
     # le tuple est (previous_node, time_from_origin)
-    paths = {origin : (None, 0)}
+    shortest_paths = {origin : (None, 0)}
     
     current_node = origin
     visited = set()
@@ -103,42 +88,33 @@ def dijkstraPath(graphe, origin = 'A', destination = 'E'):
     while current_node != destination:
         visited.add(current_node)
 
-        current_time = paths[current_node][1]
+        current_time = shortest_paths[current_node][1]
 
         #on parcourt tous les voisins du noeud courant
         for neighbour in graphe[current_node]:
             time_from_origin_to_neighbour = graphe[current_node][neighbour] + current_time
 
-            if neighbour not in paths:
-                paths[neighbour] = (current_node, time_from_origin_to_neighbour)
+            if neighbour not in shortest_paths:
+                shortest_paths[neighbour] = (current_node, time_from_origin_to_neighbour)
             else:
-                current_shortest_time = paths[neighbour][1]
+                current_shortest_time = shortest_paths[neighbour][1]
                 if time_from_origin_to_neighbour < current_shortest_time:
-                    paths[neighbour] = (current_node,time_from_origin_to_neighbour)
+                    shortest_paths[neighbour] = (current_node,time_from_origin_to_neighbour)
         
-        next_destinations = {node : paths[node] for node in paths if node not in visited }
+        next_destinations = {node : shortest_paths[node] for node in shortest_paths if node not in visited }
 
         current_node = min(next_destinations, key=lambda k:next_destinations[k][1])
 
 
     path=[]
     #current_node = destination
-    # On parcourt le dictionnaire 'paths' : en partant de 'destination' et en allant ensuite au noeud present dans le tuple
+    #path = set tuples(node, time from origin)
+    # On parcourt le dictionnaire 'shortest_paths' : en partant de 'destination' et en allant ensuite au noeud present dans le tuple
     while current_node is not None:
-        path.append(current_node)
-        next_node = paths[current_node][0]
+        path.append((current_node, shortest_paths[current_node][1]))
+        next_node = shortest_paths[current_node][0]
         current_node = next_node
 
     #on inverse l'ordre du tableau
     path = path[::-1]
-    return path
-        
-
-    
-
-    
-
-
-    
-
-
+    return (path, shortest_paths[destination][1])

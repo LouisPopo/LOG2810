@@ -13,7 +13,7 @@ fakeDict = {
 
 def main():
     hasChargingDock, GrapheCLSCs = creerGraphe("centresLocaux.txt")
-    result = dijkstraPath(GrapheCLSCs, '1', '9')
+    result = plusCourtChemin('faible_risque','1','20')
     print (result)
     
 main()
