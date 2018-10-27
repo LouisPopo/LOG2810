@@ -55,25 +55,34 @@ battery_cost = {
     }
 }
 
-def plusCourtChemin(transport_category, origine, destination):
+def plusCourtChemin(transport_category, origine, destination, type_vehicule=Vehicule.NINH):
     path, path_time = dijkstraPath(GrapheCLSCs, origine, destination)
     
-    time_to_consume_80_NINH = 80/battery_cost[Vehicule.NINH][transport_category]
-    battery_finale = BATTERIE_PLEINE - battery_cost[Vehicule.NINH][transport_category]*path_time
+    time_to_consume_80 = 80/battery_cost[type_vehicule][transport_category]
+    battery_finale = BATTERIE_PLEINE - battery_cost[type_vehicule][transport_category]*path_time
 
-    print("time_to_consume_80_NINH = " + str(time_to_consume_80_NINH))
-
-    if(path_time > time_to_consume_80_NINH):
-        #sinon on va parcourir le chmin a lenvers a partir du moment ou la batterie est en dessous de 20 pour trouver la premiere borne de recharge
+    chemin_trouve = False
+    
+    # Si la voiture se decharge avant d'arriver
+    if(path_time > time_to_consume_80):
+        #On parcourt le chemin dans le sens inverse, et on trouve la premiere CLSC, ou on peut se recharger
         for clsc,time_to_node in path[::-1]:
-            if (time_to_node < time_to_consume_80_NINH and BorneRecharge[clsc]):
+            if (time_to_node < time_to_consume_80 and BorneRecharge[clsc]):
                 print("On recharge a la borne : " + str(clsc))
                 time_recharge_destination = path_time - time_to_node
-                battery_finale = BATTERIE_PLEINE - battery_cost[Vehicule.NINH][transport_category]*time_recharge_destination
+                battery_finale = BATTERIE_PLEINE - battery_cost[type_vehicule][transport_category]*time_recharge_destination
                 path_time += 120
+                chemin_trouve = True
                 break
-    
-    return[path, path_time, Vehicule.NINH, battery_finale]
+
+    if(not chemin_trouve and type_vehicule is Vehicule.NINH):
+        plusCourtChemin(transport_category,origine,destination,Vehicule.LIion)
+
+    if(chemin_trouve):
+        return[path, path_time, type_vehicule, battery_finale]
+    else:
+        print("Impossible")
+        return None
 
 
 
