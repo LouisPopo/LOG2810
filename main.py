@@ -1,4 +1,4 @@
-from graphesFunctions import creerGraphe, lireGraphe, plusCourtChemin,dijkstraPath
+from graphesFunctions import *
 from menu import menu
 
 GrapheCLSCs = None
@@ -13,8 +13,7 @@ fakeDict = {
 
 def main():
     hasChargingDock, GrapheCLSCs = creerGraphe("centresLocaux.txt")
-    #lireGraphe(GrapheCLSCs)
-    print(dijkstraPath(fakeDict,'A','D'))
-    #menu()
+    result = dijkstraPath(GrapheCLSCs, '1', '9')
+    print (result)
     
 main()

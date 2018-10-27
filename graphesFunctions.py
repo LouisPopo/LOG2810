@@ -94,7 +94,7 @@ def plusCourtChemin(graphe, typeParcours = None, origine = 'A', destination = 'E
         '''
     
 def dijkstraPath(graphe, origin = 'A', destination = 'E'):
-    # le tuple est (Precedent, temps)
+    # le tuple est (previous_node, time_from_origin)
     paths = {origin : (None, 0)}
     
     current_node = origin
@@ -103,35 +103,38 @@ def dijkstraPath(graphe, origin = 'A', destination = 'E'):
     while current_node != destination:
         visited.add(current_node)
 
-        current_node_time = paths[current_node][1]
+        current_time = paths[current_node][1]
 
         #on parcourt tous les voisins du noeud courant
         for neighbour in graphe[current_node]:
-            new_time = graphe[current_node][neighbour] + current_node_time
+            time_from_origin_to_neighbour = graphe[current_node][neighbour] + current_time
 
             if neighbour not in paths:
-                paths[neighbour] = (current_node, new_time)
+                paths[neighbour] = (current_node, time_from_origin_to_neighbour)
             else:
                 current_shortest_time = paths[neighbour][1]
-                if current_shortest_time > new_time:
-                    paths[neighbour] = (current_node,new_time)
+                if time_from_origin_to_neighbour < current_shortest_time:
+                    paths[neighbour] = (current_node,time_from_origin_to_neighbour)
         
         next_destinations = {node : paths[node] for node in paths if node not in visited }
 
         current_node = min(next_destinations, key=lambda k:next_destinations[k][1])
 
-        print(paths)
-
 
     path=[]
+    #current_node = destination
+    # On parcourt le dictionnaire 'paths' : en partant de 'destination' et en allant ensuite au noeud present dans le tuple
     while current_node is not None:
         path.append(current_node)
         next_node = paths[current_node][0]
         current_node = next_node
 
+    #on inverse l'ordre du tableau
     path = path[::-1]
     return path
         
+
+    
 
     
 
