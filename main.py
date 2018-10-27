@@ -13,7 +13,7 @@ fakeDict = {
 
 def main():
     hasChargingDock, GrapheCLSCs = creerGraphe("centresLocaux.txt")
-    result = plusCourtChemin('faible_risque','1','20')
+    result = plusCourtChemin('haut_risque','23','27')
     print (result)
     
 main()
