@@ -1,8 +1,8 @@
 import collections
 from enum import Enum
 
-END_OF_LINE = "\n"
-EMPTY_LINE = "\n\n"
+FIN_DE_LIGNE = "\n"
+LIGNE_VIDE = "\n\n"
 BATTERIE_PLEINE = 100
 
 class Vehicule(Enum):
@@ -11,28 +11,28 @@ class Vehicule(Enum):
 
 BorneRecharge, GrapheCLSCs = dict(), dict()
 
-def creerGraphe(fileName):
-    file = open(fileName,"r").read()
+def creerGraphe(nomFichier):
+    fichier = open(nomFichier,"r").read()
     
-    bornesCLSC,arcs = file.split(EMPTY_LINE)
+    bornesCLSC , arcs = fichier.split(LIGNE_VIDE)
 
-    listBornes = bornesCLSC.split(END_OF_LINE)
-    listArcs = arcs.split(END_OF_LINE)
+    listeBornes = bornesCLSC.split(FIN_DE_LIGNE)
+    listeArcs = arcs.split(FIN_DE_LIGNE)
 
-    for line in listBornes:
-        numero, hasCharge = line.split(',')
-        BorneRecharge[numero] = hasCharge
+    for ligne in listeBornes:
+        numeroCLSC, aUneCharge = ligne.split(',')
+        BorneRecharge[numeroCLSC] = aUneCharge
 
-    for line in listArcs:
-        nodeA, nodeB, cost = line.split(',')
+    for ligne in listeArcs:
+        noeudA, noeudB, cout = ligne.split(',')
         
-        if nodeA not in GrapheCLSCs:
-            GrapheCLSCs[nodeA] = {}
-        if nodeB not in GrapheCLSCs:
-            GrapheCLSCs[nodeB] = {}
+        if noeudA not in GrapheCLSCs:
+            GrapheCLSCs[noeudA] = {}
+        if noeudB not in GrapheCLSCs:
+            GrapheCLSCs[noeudB] = {}
         
-        GrapheCLSCs[nodeA][nodeB] = int(cost)
-        GrapheCLSCs[nodeB][nodeA] = int(cost)
+        GrapheCLSCs[noeudA][noeudB] = int(cout)
+        GrapheCLSCs[noeudB][noeudA] = int(cout)
 
     return BorneRecharge,GrapheCLSCs
 
@@ -41,7 +41,7 @@ def lireGraphe(graphe):
         print(node)
         print (graphe[node])
    
-battery_cost = {
+taux_decharge = {
     Vehicule.NINH : {
         'faible_risque' : (6/60),
         'moyen_risque' : (12/60),
@@ -55,39 +55,39 @@ battery_cost = {
     }
 }
 
-def plusCourtChemin(transport_category, origine, destination, type_vehicule=Vehicule.NINH):
-    path, path_time = dijkstraPath(GrapheCLSCs, origine, destination)
+def plusCourtChemin(categorie_transport, origine, destination, type_vehicule=Vehicule.NINH):
+    chemin, temps_chemin = algoDijkstra(GrapheCLSCs, origine, destination)
     
-    time_to_consume_80 = 80/battery_cost[type_vehicule][transport_category]
-    battery_finale = BATTERIE_PLEINE - battery_cost[type_vehicule][transport_category]*path_time
+    temps_decharge_80 = 80/taux_decharge[type_vehicule][categorie_transport]
+    niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][categorie_transport]*temps_chemin
 
     chemin_trouve = False
     
     # Si la voiture se decharge avant d'arriver
-    if(path_time > time_to_consume_80):
+    if(temps_chemin > temps_decharge_80):
         #On parcourt le chemin dans le sens inverse, et on trouve la premiere CLSC, ou on peut se recharger
-        for clsc,time_to_node in path[::-1]:
-            if (time_to_node < time_to_consume_80 and BorneRecharge[clsc]):
+        for clsc,temps_a_partir_origine in chemin[::-1]:
+            if (temps_a_partir_origine < temps_decharge_80 and BorneRecharge[clsc]):
                 print("On recharge a la borne : " + str(clsc))
-                time_recharge_destination = path_time - time_to_node
-                battery_finale = BATTERIE_PLEINE - battery_cost[type_vehicule][transport_category]*time_recharge_destination
-                path_time += 120
+                time_recharge_destination = temps_chemin - temps_a_partir_origine
+                niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][categorie_transport]*time_recharge_destination
+                temps_chemin += 120
                 chemin_trouve = True
                 break
 
     if(not chemin_trouve and type_vehicule is Vehicule.NINH):
-        plusCourtChemin(transport_category,origine,destination,Vehicule.LIion)
+        plusCourtChemin(categorie_transport,origine,destination,Vehicule.LIion)
 
     if(chemin_trouve):
-        return[path, path_time, type_vehicule, battery_finale]
+        return[chemin, temps_chemin, type_vehicule, niveau_batterie_finale]
     else:
         print("Impossible")
         return None
 
 
 
-# returns a tuple (set of nodes to go through, total time)
-def dijkstraPath(graphe, origin, destination):
+# returns a tuple (set [node : time from origin], total time)
+def algoDijkstra(graphe, origin, destination):
     # le tuple est (previous_node, time_from_origin)
     shortest_paths = {origin : (None, 0)}
     

@@ -15,7 +15,7 @@ def main():
     hasChargingDock, GrapheCLSCs = creerGraphe("centresLocaux.txt")
     result = plusCourtChemin('haut_risque','23','20')
     print (result)
-    
+    print(Vehicule.NINH)
     
     
 main()
