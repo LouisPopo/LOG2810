@@ -1,6 +1,5 @@
 from graphesFunctions import *
 from menu import menu
-from enum import Enum
 
 GrapheCLSCs = None
 
@@ -12,11 +11,9 @@ fakeDict = {
     'E' : {'B':4,'D':1}
 }
 
-
-
 def main():
     hasChargingDock, GrapheCLSCs = creerGraphe("centresLocaux.txt")
-    result = plusCourtChemin("faible_risque",'23','27')
+    result = plusCourtChemin('haut_risque','23','20')
     print (result)
     
     
