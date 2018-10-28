@@ -55,6 +55,7 @@ taux_decharge = {
     }
 }
 
+#return [chemin, temps total, type vehicule, niveau batterie finale]
 def plusCourtChemin(categorie_transport, origine, destination, type_vehicule=Vehicule.NINH):
     chemin, temps_chemin = algoDijkstra(GrapheCLSCs, origine, destination)
     
@@ -69,8 +70,8 @@ def plusCourtChemin(categorie_transport, origine, destination, type_vehicule=Veh
         for clsc,temps_a_partir_origine in chemin[::-1]:
             if (temps_a_partir_origine < temps_decharge_80 and BorneRecharge[clsc]):
                 print("On recharge a la borne : " + str(clsc))
-                time_recharge_destination = temps_chemin - temps_a_partir_origine
-                niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][categorie_transport]*time_recharge_destination
+                temps_ici_destination = temps_chemin - temps_a_partir_origine
+                niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][categorie_transport]*temps_ici_destination
                 temps_chemin += 120
                 chemin_trouve = True
                 break
@@ -84,46 +85,44 @@ def plusCourtChemin(categorie_transport, origine, destination, type_vehicule=Veh
         print("Impossible")
         return None
 
-
-
 # returns a tuple (set [node : time from origin], total time)
-def algoDijkstra(graphe, origin, destination):
+def algoDijkstra(graphe, origine, destination):
     # le tuple est (previous_node, time_from_origin)
-    shortest_paths = {origin : (None, 0)}
+    plus_courts_chemins = {origine : (None, 0)}
     
-    current_node = origin
-    visited = set()
+    noeud_courant = origine
+    noeuds_visites = set()
 
-    while current_node != destination:
-        visited.add(current_node)
+    while noeud_courant != destination:
+        noeuds_visites.add(noeud_courant)
 
-        current_time = shortest_paths[current_node][1]
+        temps_origine_a_courant = plus_courts_chemins[noeud_courant][1]
 
         #on parcourt tous les voisins du noeud courant
-        for neighbour in graphe[current_node]:
-            time_from_origin_to_neighbour = graphe[current_node][neighbour] + current_time
+        for voisin in graphe[noeud_courant]:
+            temps_origine_a_voisin = graphe[noeud_courant][voisin] + temps_origine_a_courant
 
-            if neighbour not in shortest_paths:
-                shortest_paths[neighbour] = (current_node, time_from_origin_to_neighbour)
+            if voisin not in plus_courts_chemins:
+                plus_courts_chemins[voisin] = (noeud_courant, temps_origine_a_voisin)
             else:
-                current_shortest_time = shortest_paths[neighbour][1]
-                if time_from_origin_to_neighbour < current_shortest_time:
-                    shortest_paths[neighbour] = (current_node,time_from_origin_to_neighbour)
+                temps_minimal_actuel = plus_courts_chemins[voisin][1]
+                if temps_origine_a_voisin < temps_minimal_actuel:
+                    plus_courts_chemins[voisin] = (noeud_courant,temps_origine_a_voisin)
         
-        next_destinations = {node : shortest_paths[node] for node in shortest_paths if node not in visited }
+        prochains_noeuds = {node : plus_courts_chemins[node] for node in plus_courts_chemins if node not in noeuds_visites }
 
-        current_node = min(next_destinations, key=lambda k:next_destinations[k][1])
+        noeud_courant = min(prochains_noeuds, key=lambda k:prochains_noeuds[k][1])
 
 
-    path=[]
-    #current_node = destination
-    #path = set tuples(node, time from origin)
-    # On parcourt le dictionnaire 'shortest_paths' : en partant de 'destination' et en allant ensuite au noeud present dans le tuple
-    while current_node is not None:
-        path.append((current_node, shortest_paths[current_node][1]))
-        next_node = shortest_paths[current_node][0]
-        current_node = next_node
+    chemin=[]
+    #noeud_courant = destination
+    #chemin = set tuples(node, time from origin)
+    # On parcourt le dictionnaire 'plus_courts_chemins' : en partant de 'destination' et en allant ensuite au noeud present dans le tuple
+    while noeud_courant is not None:
+        chemin.append((noeud_courant, plus_courts_chemins[noeud_courant][1]))
+        prochain_noeud = plus_courts_chemins[noeud_courant][0]
+        noeud_courant = prochain_noeud
 
     #on inverse l'ordre du tableau
-    path = path[::-1]
-    return (path, shortest_paths[destination][1])
+    chemin = chemin[::-1]
+    return (chemin, plus_courts_chemins[destination][1])
