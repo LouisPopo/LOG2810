@@ -1,15 +1,35 @@
 import collections
 from dictionnaires import *
+import os.path
 
 FIN_DE_LIGNE = "\n"
 LIGNE_VIDE = "\n\n"
 BATTERIE_PLEINE = 100
 
+# Dictionnaire avec les CLSCs qui ont des bornes de recharge et le Graphe de toutes les CLSCs
 BorneRecharge, GrapheCLSCs = dict(), dict()
 
+# Verifie si le graphe Existe
+# Retourne un Boolean
+def verifierExistenceGraphe():
+    if (GrapheCLSCs):
+        return True
+    return False
+
+# Parametre : chemin vers le fichier
+# Si le chemin est valide, il cree un Graphe, sinon imprime Erreur
+# Ne retourne Rien
 def creerGraphe(nomFichier):
-    fichier = open(nomFichier,"r").read()
     
+    BorneRecharge.clear()
+    GrapheCLSCs.clear()
+
+    if(not os.path.isfile(nomFichier)):
+        print ("Le nom de fichier n'existe pas")
+        return
+    
+    fichier = open(nomFichier,"r").read()
+
     bornesCLSC , arcs = fichier.split(LIGNE_VIDE)
 
     listeBornes = bornesCLSC.split(FIN_DE_LIGNE)
@@ -30,17 +50,17 @@ def creerGraphe(nomFichier):
         GrapheCLSCs[noeudA][noeudB] = int(cout)
         GrapheCLSCs[noeudB][noeudA] = int(cout)
 
-    return BorneRecharge,GrapheCLSCs
-
-def lireGraphe(graphe):
-    for node in graphe:
+# Si le GrapheCLSCs existe, il l'imprime, sinon imprime Erreur
+def lireGraphe():
+    for node in GrapheCLSCs:
         print(node)
-        print (graphe[node])
-   
+        print (GrapheCLSCs[node])
 
-#return [chemin, temps total, type vehicule, niveau batterie finale]
+# Parametres : Risque.type, le noeud d'origine et la destinatinons (en string)
+# Retourne [[chemin], temps total, Vehicule.type, niveau batterie finale]
 def plusCourtChemin(risque_transport, origine, destination, type_vehicule = Vehicule.NI_MH):
-    chemin, temps_chemin = algoDijkstra(GrapheCLSCs, origine, destination)
+
+    chemin, temps_chemin = algoDijkstra(origine, destination)
 
     temps_decharge_80 = 80/taux_decharge[type_vehicule][risque_transport]
     niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][risque_transport]*temps_chemin
@@ -70,8 +90,8 @@ def plusCourtChemin(risque_transport, origine, destination, type_vehicule = Vehi
         print("Impossible")
         return None
 
-# returns a tuple (set [node : time from origin], total time)
-def algoDijkstra(graphe, origine, destination):
+# Retourne un tuple (set [noeud : temps a partir d'origine], temps total)
+def algoDijkstra(origine, destination):
     # le tuple est (previous_node, time_from_origin)
     plus_courts_chemins = {origine : (None, 0)}
     
@@ -84,8 +104,8 @@ def algoDijkstra(graphe, origine, destination):
         temps_origine_a_courant = plus_courts_chemins[noeud_courant][1]
 
         #on parcourt tous les voisins du noeud courant
-        for voisin in graphe[noeud_courant]:
-            temps_origine_a_voisin = graphe[noeud_courant][voisin] + temps_origine_a_courant
+        for voisin in GrapheCLSCs[noeud_courant]:
+            temps_origine_a_voisin = GrapheCLSCs[noeud_courant][voisin] + temps_origine_a_courant
 
             if voisin not in plus_courts_chemins:
                 plus_courts_chemins[voisin] = (noeud_courant, temps_origine_a_voisin)
@@ -111,9 +131,11 @@ def algoDijkstra(graphe, origine, destination):
     #on inverse l'ordre du tableau
     chemin = chemin[::-1]
     return (chemin, plus_courts_chemins[destination][1])
-  
-def extraireSousGraphe(transport_category, origin, type_vehicule=Vehicule.NI_MH):
-    
+
+# Parametres : Risque.type, noeud origine et destination (en string), et Vehicule.Type
+# Retourne [[chemin], temps total]
+def extraireSousGraphe(transport_category, origin, type_vehicule):
+
     graphe = GrapheCLSCs
     longest_paths = {origin : (None, 0)}
     current_node = origin
@@ -143,7 +165,7 @@ def extraireSousGraphe(transport_category, origin, type_vehicule=Vehicule.NI_MH)
         if(next_destinations):
             current_node = max(next_destinations, key=lambda k:next_destinations[k][1])
         else:
-            breaks
+            break
 
     path = []
 
