@@ -13,9 +13,11 @@ fakeDict = {
 
 def main():
     hasChargingDock, GrapheCLSCs = creerGraphe("centresLocaux.txt")
-    result = plusCourtChemin('haut_risque','23','20')
-    print (result)
-    print(Vehicule.NINH)
+    chemin, temps, vehicule, batterie = plusCourtChemin('faible_risque','1','15')
+    
+    #lireGraphe(GrapheCLSCs)
+    print (batterie)
+    #print(Vehicule.NINH)
     
     
 main()

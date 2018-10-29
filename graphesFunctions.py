@@ -75,6 +75,8 @@ def plusCourtChemin(categorie_transport, origine, destination, type_vehicule=Veh
                 temps_chemin += 120
                 chemin_trouve = True
                 break
+    else:
+        chemin_trouve = True
 
     if(not chemin_trouve and type_vehicule is Vehicule.NINH):
         plusCourtChemin(categorie_transport,origine,destination,Vehicule.LIion)
