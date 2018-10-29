@@ -11,7 +11,7 @@ BorneRecharge, GrapheCLSCs = dict(), dict()
 
 # Verifie si le graphe Existe
 # Retourne un Boolean
-def verifierExistenceGraphe():
+def grapheExiste():
     if (GrapheCLSCs):
         return True
     return False
@@ -87,7 +87,6 @@ def plusCourtChemin(risque_transport, origine, destination, type_vehicule = Vehi
     if(chemin_trouve):
         return[chemin, temps_chemin, type_vehicule, niveau_batterie_finale]
     else:
-        print("Impossible")
         return None
 
 # Retourne un tuple (set [noeud : temps a partir d'origine], temps total)
