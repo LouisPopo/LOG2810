@@ -4,8 +4,5 @@ from enum import Enum
 from graphesFunctions import *
 
 def main():
-    
-    creerGraphe('centresLocaux.txt')
-    res = plusCourtChemin(Risque.faible,'1','15')
-    print(res)
+    menu()
 main()
