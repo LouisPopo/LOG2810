@@ -1,8 +1,8 @@
 import collections
 from enum import Enum
 
-END_OF_LINE = "\n"
-EMPTY_LINE = "\n\n"
+FIN_DE_LIGNE = "\n"
+LIGNE_VIDE = "\n\n"
 BATTERIE_PLEINE = 100
 
 class Vehicule(Enum):
@@ -11,28 +11,28 @@ class Vehicule(Enum):
 
 BorneRecharge, GrapheCLSCs = dict(), dict()
 
-def creerGraphe(fileName):
-    file = open(fileName,"r").read()
+def creerGraphe(nomFichier):
+    fichier = open(nomFichier,"r").read()
     
-    bornesCLSC,arcs = file.split(EMPTY_LINE)
+    bornesCLSC , arcs = fichier.split(LIGNE_VIDE)
 
-    listBornes = bornesCLSC.split(END_OF_LINE)
-    listArcs = arcs.split(END_OF_LINE)
+    listeBornes = bornesCLSC.split(FIN_DE_LIGNE)
+    listeArcs = arcs.split(FIN_DE_LIGNE)
 
-    for line in listBornes:
-        numero, hasCharge = line.split(',')
-        BorneRecharge[numero] = hasCharge
+    for ligne in listeBornes:
+        numeroCLSC, aUneCharge = ligne.split(',')
+        BorneRecharge[numeroCLSC] = aUneCharge
 
-    for line in listArcs:
-        nodeA, nodeB, cost = line.split(',')
+    for ligne in listeArcs:
+        noeudA, noeudB, cout = ligne.split(',')
         
-        if nodeA not in GrapheCLSCs:
-            GrapheCLSCs[nodeA] = {}
-        if nodeB not in GrapheCLSCs:
-            GrapheCLSCs[nodeB] = {}
+        if noeudA not in GrapheCLSCs:
+            GrapheCLSCs[noeudA] = {}
+        if noeudB not in GrapheCLSCs:
+            GrapheCLSCs[noeudB] = {}
         
-        GrapheCLSCs[nodeA][nodeB] = int(cost)
-        GrapheCLSCs[nodeB][nodeA] = int(cost)
+        GrapheCLSCs[noeudA][noeudB] = int(cout)
+        GrapheCLSCs[noeudB][noeudA] = int(cout)
 
     return BorneRecharge,GrapheCLSCs
 
@@ -41,7 +41,7 @@ def lireGraphe(graphe):
         print(node)
         print (graphe[node])
    
-battery_cost = {
+taux_decharge = {
     Vehicule.NINH : {
         'faible_risque' : (6/60),
         'moyen_risque' : (12/60),
@@ -55,80 +55,81 @@ battery_cost = {
     }
 }
 
-def plusCourtChemin(transport_category, origine, destination, type_vehicule=Vehicule.NINH):
-    path, path_time = dijkstraPath(GrapheCLSCs, origine, destination)
+#return [chemin, temps total, type vehicule, niveau batterie finale]
+def plusCourtChemin(categorie_transport, origine, destination, type_vehicule=Vehicule.NINH):
+    chemin, temps_chemin = algoDijkstra(GrapheCLSCs, origine, destination)
     
-    time_to_consume_80 = 80/battery_cost[type_vehicule][transport_category]
-    battery_finale = BATTERIE_PLEINE - battery_cost[type_vehicule][transport_category]*path_time
+    temps_decharge_80 = 80/taux_decharge[type_vehicule][categorie_transport]
+    niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][categorie_transport]*temps_chemin
 
     chemin_trouve = False
     
     # Si la voiture se decharge avant d'arriver
-    if(path_time > time_to_consume_80):
+    if(temps_chemin > temps_decharge_80):
         #On parcourt le chemin dans le sens inverse, et on trouve la premiere CLSC, ou on peut se recharger
-        for clsc,time_to_node in path[::-1]:
-            if (time_to_node < time_to_consume_80 and BorneRecharge[clsc]):
+        for clsc,temps_a_partir_origine in chemin[::-1]:
+            if (temps_a_partir_origine < temps_decharge_80 and BorneRecharge[clsc]):
                 print("On recharge a la borne : " + str(clsc))
-                time_recharge_destination = path_time - time_to_node
-                battery_finale = BATTERIE_PLEINE - battery_cost[type_vehicule][transport_category]*time_recharge_destination
-                path_time += 120
+                temps_ici_destination = temps_chemin - temps_a_partir_origine
+                niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][categorie_transport]*temps_ici_destination
+                temps_chemin += 120
                 chemin_trouve = True
                 break
+    else:
+        chemin_trouve = True
 
     if(not chemin_trouve and type_vehicule is Vehicule.NINH):
-        plusCourtChemin(transport_category,origine,destination,Vehicule.LIion)
+        plusCourtChemin(categorie_transport,origine,destination,Vehicule.LIion)
 
     if(chemin_trouve):
-        return[path, path_time, type_vehicule, battery_finale]
+        return[chemin, temps_chemin, type_vehicule, niveau_batterie_finale]
     else:
         print("Impossible")
         return None
 
-
-
-# returns a tuple (set of nodes to go through, total time)
-def dijkstraPath(graphe, origin, destination):
+# returns a tuple (set [node : time from origin], total time)
+def algoDijkstra(graphe, origine, destination):
     # le tuple est (previous_node, time_from_origin)
-    shortest_paths = {origin : (None, 0)}
+    plus_courts_chemins = {origine : (None, 0)}
     
-    current_node = origin
-    visited = set()
+    noeud_courant = origine
+    noeuds_visites = set()
 
-    while current_node != destination:
-        visited.add(current_node)
+    while noeud_courant != destination:
+        noeuds_visites.add(noeud_courant)
 
-        current_time = shortest_paths[current_node][1]
+        temps_origine_a_courant = plus_courts_chemins[noeud_courant][1]
 
         #on parcourt tous les voisins du noeud courant
-        for neighbour in graphe[current_node]:
-            time_from_origin_to_neighbour = graphe[current_node][neighbour] + current_time
+        for voisin in graphe[noeud_courant]:
+            temps_origine_a_voisin = graphe[noeud_courant][voisin] + temps_origine_a_courant
 
-            if neighbour not in shortest_paths:
-                shortest_paths[neighbour] = (current_node, time_from_origin_to_neighbour)
+            if voisin not in plus_courts_chemins:
+                plus_courts_chemins[voisin] = (noeud_courant, temps_origine_a_voisin)
             else:
-                current_shortest_time = shortest_paths[neighbour][1]
-                if time_from_origin_to_neighbour < current_shortest_time:
-                    shortest_paths[neighbour] = (current_node,time_from_origin_to_neighbour)
+                temps_minimal_actuel = plus_courts_chemins[voisin][1]
+                if temps_origine_a_voisin < temps_minimal_actuel:
+                    plus_courts_chemins[voisin] = (noeud_courant,temps_origine_a_voisin)
         
-        next_destinations = {node : shortest_paths[node] for node in shortest_paths if node not in visited }
+        prochains_noeuds = {node : plus_courts_chemins[node] for node in plus_courts_chemins if node not in noeuds_visites }
 
-        current_node = min(next_destinations, key=lambda k:next_destinations[k][1])
+        noeud_courant = min(prochains_noeuds, key=lambda k:prochains_noeuds[k][1])
 
 
-    path=[]
-    #current_node = destination
-    #path = set tuples(node, time from origin)
-    # On parcourt le dictionnaire 'shortest_paths' : en partant de 'destination' et en allant ensuite au noeud present dans le tuple
-    while current_node is not None:
-        path.append((current_node, shortest_paths[current_node][1]))
-        next_node = shortest_paths[current_node][0]
-        current_node = next_node
+    chemin=[]
+    #noeud_courant = destination
+    #chemin = set tuples(node, time from origin)
+    # On parcourt le dictionnaire 'plus_courts_chemins' : en partant de 'destination' et en allant ensuite au noeud present dans le tuple
+    while noeud_courant is not None:
+        chemin.append((noeud_courant, plus_courts_chemins[noeud_courant][1]))
+        prochain_noeud = plus_courts_chemins[noeud_courant][0]
+        noeud_courant = prochain_noeud
 
     #on inverse l'ordre du tableau
-    path = path[::-1]
-    return (path, shortest_paths[destination][1])
-
-def extraireSousGraphe(transport_category, origin, type_vehicule=Vehicule.NINH):
+    chemin = chemin[::-1]
+    return (chemin, plus_courts_chemins[destination][1])
+  
+  def extraireSousGraphe(transport_category, origin, type_vehicule=Vehicule.NINH):
     
     graphe = GrapheCLSCs
     longest_paths = {origin : (None, 0)}
@@ -151,11 +152,15 @@ def extraireSousGraphe(transport_category, origin, type_vehicule=Vehicule.NINH):
             else:
                 current_longest_time = longest_paths[neighbour][1]
                 if time_from_origin_to_neighbour > current_longest_time:
-                    longest_paths[neighbour] = (current_node, time_from_origin_to_neighbour)
+                    if longest_paths[neighbour][0] not in visited:
+                        if longest_paths[neighbour][0] != None:
+                            longest_paths[neighbour] = (current_node, time_from_origin_to_neighbour)
 
         next_destinations = {node : longest_paths[node] for node in longest_paths if node not in visited }
-
-        current_node = max(next_destinations, key=lambda k:next_destinations[k][1])
+        if(next_destinations):
+            current_node = max(next_destinations, key=lambda k:next_destinations[k][1])
+        else:
+            breaks
 
     path = []
 
@@ -166,4 +171,4 @@ def extraireSousGraphe(transport_category, origin, type_vehicule=Vehicule.NINH):
 
     path = path[::-1]
 
-    return (path, longest_paths[current_node][1])
+    return [path, current_time]
