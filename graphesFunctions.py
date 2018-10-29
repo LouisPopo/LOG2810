@@ -127,3 +127,43 @@ def dijkstraPath(graphe, origin, destination):
     #on inverse l'ordre du tableau
     path = path[::-1]
     return (path, shortest_paths[destination][1])
+
+def extraireSousGraphe(transport_category, origin, type_vehicule=Vehicule.NINH):
+    
+    graphe = GrapheCLSCs
+    longest_paths = {origin : (None, 0)}
+    current_node = origin
+    visited = set()
+
+    time_to_consume_80 = 80/battery_cost[type_vehicule][transport_category]
+
+    while(longest_paths[current_node][1] < time_to_consume_80):
+        visited.add(current_node)
+
+        current_time = longest_paths[current_node][1]
+
+        #on parcourt tous les voisins du noeud courant
+        for neighbour in graphe[current_node]:
+            time_from_origin_to_neighbour = graphe[current_node][neighbour] + current_time
+
+            if neighbour not in longest_paths:
+                longest_paths[neighbour] = (current_node, time_from_origin_to_neighbour)
+            else:
+                current_longest_time = longest_paths[neighbour][1]
+                if time_from_origin_to_neighbour > current_longest_time:
+                    longest_paths[neighbour] = (current_node, time_from_origin_to_neighbour)
+
+        next_destinations = {node : longest_paths[node] for node in longest_paths if node not in visited }
+
+        current_node = max(next_destinations, key=lambda k:next_destinations[k][1])
+
+    path = []
+
+    while current_node is not None:
+        path.append((current_node, longest_paths[current_node][1]))
+        next_node = longest_paths[current_node][0]
+        current_node = next_node
+
+    path = path[::-1]
+
+    return (path, longest_paths[current_node][1])
