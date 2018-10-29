@@ -1,95 +1,128 @@
-END_OF_LINE = "\n"
-EMPTY_LINE = "\n\n"
+import collections
+from enum import Enum
 
-CLSCs, GrapheCLSCs = dict(), dict()
+FIN_DE_LIGNE = "\n"
+LIGNE_VIDE = "\n\n"
+BATTERIE_PLEINE = 100
 
-def creerGraphe(fileName):
-    file = open(fileName,"r").read()
+class Vehicule(Enum):
+    NINH = 'NI-NH'
+    LIion = 'LI-ion'
+
+BorneRecharge, GrapheCLSCs = dict(), dict()
+
+def creerGraphe(nomFichier):
+    fichier = open(nomFichier,"r").read()
     
-    bornesCLSC,arcs = file.split(EMPTY_LINE)
+    bornesCLSC , arcs = fichier.split(LIGNE_VIDE)
 
-    listBornes = bornesCLSC.split(END_OF_LINE)
-    listArcs = arcs.split(END_OF_LINE)
+    listeBornes = bornesCLSC.split(FIN_DE_LIGNE)
+    listeArcs = arcs.split(FIN_DE_LIGNE)
 
-    for line in listBornes:
-        numero, hasCharge = line.split(',')
-        CLSCs[numero] = hasCharge
+    for ligne in listeBornes:
+        numeroCLSC, aUneCharge = ligne.split(',')
+        BorneRecharge[numeroCLSC] = aUneCharge
 
-    for line in listArcs:
-        nodeA, nodeB, cost = line.split(',')
+    for ligne in listeArcs:
+        noeudA, noeudB, cout = ligne.split(',')
         
-        if nodeA not in GrapheCLSCs:
-            GrapheCLSCs[nodeA] = {}
-        if nodeB not in GrapheCLSCs:
-            GrapheCLSCs[nodeB] = {}
+        if noeudA not in GrapheCLSCs:
+            GrapheCLSCs[noeudA] = {}
+        if noeudB not in GrapheCLSCs:
+            GrapheCLSCs[noeudB] = {}
         
-        GrapheCLSCs[nodeA][nodeB] = int(cost)
-        GrapheCLSCs[nodeB][nodeA] = int(cost)
+        GrapheCLSCs[noeudA][noeudB] = int(cout)
+        GrapheCLSCs[noeudB][noeudA] = int(cout)
 
-    return CLSCs,GrapheCLSCs
+    return BorneRecharge,GrapheCLSCs
 
 def lireGraphe(graphe):
     for node in graphe:
         print(node)
         print (graphe[node])
+   
+taux_decharge = {
+    Vehicule.NINH : {
+        'faible_risque' : (6/60),
+        'moyen_risque' : (12/60),
+        'haut_risque' : (48/60)
+    },
 
-def plusCourtChemin(graphe, typeParcours = None, origine = '1', destination = '5'):
-    print(graphe)
+    Vehicule.LIion : {
+        'faible_risque' : (5/60),
+        'moyen_risque' : (10/60),
+        'haut_risque' : (30/60)
+    }
+}
+
+#return [chemin, temps total, type vehicule, niveau batterie finale]
+def plusCourtChemin(categorie_transport, origine, destination, type_vehicule=Vehicule.NINH):
+    chemin, temps_chemin = algoDijkstra(GrapheCLSCs, origine, destination)
     
-    visited, parcours = list(), list()
-    unvisited = {node: float('inf') for node in graphe} #mets la distance a 'Infini' pour tous les points
+    temps_decharge_80 = 80/taux_decharge[type_vehicule][categorie_transport]
+    niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][categorie_transport]*temps_chemin
 
-    current = origine
-    currentTime = 0
-    unvisited[origine] = currentTime                                             #mets la distance a '0' pour le point de depart
+    chemin_trouve = False
+    
+    # Si la voiture se decharge avant d'arriver
+    if(temps_chemin > temps_decharge_80):
+        #On parcourt le chemin dans le sens inverse, et on trouve la premiere CLSC, ou on peut se recharger
+        for clsc,temps_a_partir_origine in chemin[::-1]:
+            if (temps_a_partir_origine < temps_decharge_80 and BorneRecharge[clsc]):
+                print("On recharge a la borne : " + str(clsc))
+                temps_ici_destination = temps_chemin - temps_a_partir_origine
+                niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][categorie_transport]*temps_ici_destination
+                temps_chemin += 120
+                chemin_trouve = True
+                break
 
+    if(not chemin_trouve and type_vehicule is Vehicule.NINH):
+        plusCourtChemin(categorie_transport,origine,destination,Vehicule.LIion)
 
-    while unvisited:
-        print("--Unvisited--")
-        print(unvisited)
-        print("Visited")
-        print(visited)
-        # 3. Select the unvisited node with the smallest distance, 
-        # it's origin the first time.
-        current = min(unvisited, key= lambda cost: unvisited.get(cost))  
+    if(chemin_trouve):
+        return[chemin, temps_chemin, type_vehicule, niveau_batterie_finale]
+    else:
+        print("Impossible")
+        return None
 
-        # 4. Find unvisited neighbors for the current node 
-        # and calculate their distances through the current node.
+# returns a tuple (set [node : time from origin], total time)
+def algoDijkstra(graphe, origine, destination):
+    # le tuple est (previous_node, time_from_origin)
+    plus_courts_chemins = {origine : (None, 0)}
+    
+    noeud_courant = origine
+    noeuds_visites = set()
 
-        for neighbour in graphe[current]:
-            if neighbour in unvisited:
-                newCost = graphe[current][neighbour] + currentTime
+    while noeud_courant != destination:
+        noeuds_visites.add(noeud_courant)
 
-                # Compare the newly calculated distance to the assigned 
-                # and save the smaller one.
+        temps_origine_a_courant = plus_courts_chemins[noeud_courant][1]
 
-                if newCost < unvisited[neighbour]:
-                    unvisited[neighbour] = newCost
+        #on parcourt tous les voisins du noeud courant
+        for voisin in graphe[noeud_courant]:
+            temps_origine_a_voisin = graphe[noeud_courant][voisin] + temps_origine_a_courant
 
-        # 5. Mark the current node as visited 
-        # and remove it from the unvisited set.
-
-        visited.append(current)
-        del unvisited[current] 
-
-    print(visited)
+            if voisin not in plus_courts_chemins:
+                plus_courts_chemins[voisin] = (noeud_courant, temps_origine_a_voisin)
+            else:
+                temps_minimal_actuel = plus_courts_chemins[voisin][1]
+                if temps_origine_a_voisin < temps_minimal_actuel:
+                    plus_courts_chemins[voisin] = (noeud_courant,temps_origine_a_voisin)
         
-        
-    '''
-        c
+        prochains_noeuds = {node : plus_courts_chemins[node] for node in plus_courts_chemins if node not in noeuds_visites }
 
-                                    #Ajoute le noeud trouve au CLSC visites
-                                    #L'enleve des CLSCS non visites
-        for neighbor in GrapheCLSCs[current]:                           #Cherche parmis les voisins de ce noeud
-            if neighbor not in visited:                                             #Si on a pas deja visite le voisin
-                if GrapheCLSCs[current][neighbor] < unvisited[neighbor]:        #Si la distance entre le noeud et son voisin est plus petite que celle qui avait avant  
-                    unvisited[neighbor] = GrapheCLSCs[current][neighbor]        #On la change
-        '''
-    
-        
-    
+        noeud_courant = min(prochains_noeuds, key=lambda k:prochains_noeuds[k][1])
 
 
-    
+    chemin=[]
+    #noeud_courant = destination
+    #chemin = set tuples(node, time from origin)
+    # On parcourt le dictionnaire 'plus_courts_chemins' : en partant de 'destination' et en allant ensuite au noeud present dans le tuple
+    while noeud_courant is not None:
+        chemin.append((noeud_courant, plus_courts_chemins[noeud_courant][1]))
+        prochain_noeud = plus_courts_chemins[noeud_courant][0]
+        noeud_courant = prochain_noeud
 
-
+    #on inverse l'ordre du tableau
+    chemin = chemin[::-1]
+    return (chemin, plus_courts_chemins[destination][1])
