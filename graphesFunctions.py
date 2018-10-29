@@ -1,13 +1,9 @@
 import collections
-from enum import Enum
+from dictionnaires import *
 
 FIN_DE_LIGNE = "\n"
 LIGNE_VIDE = "\n\n"
 BATTERIE_PLEINE = 100
-
-class Vehicule(Enum):
-    NINH = 'NI-NH'
-    LIion = 'LI-ion'
 
 BorneRecharge, GrapheCLSCs = dict(), dict()
 
@@ -41,26 +37,13 @@ def lireGraphe(graphe):
         print(node)
         print (graphe[node])
    
-taux_decharge = {
-    Vehicule.NINH : {
-        'faible_risque' : (6/60),
-        'moyen_risque' : (12/60),
-        'haut_risque' : (48/60)
-    },
-
-    Vehicule.LIion : {
-        'faible_risque' : (5/60),
-        'moyen_risque' : (10/60),
-        'haut_risque' : (30/60)
-    }
-}
 
 #return [chemin, temps total, type vehicule, niveau batterie finale]
-def plusCourtChemin(categorie_transport, origine, destination, type_vehicule=Vehicule.NINH):
+def plusCourtChemin(risque_transport, origine, destination, type_vehicule = Vehicule.NI_MH):
     chemin, temps_chemin = algoDijkstra(GrapheCLSCs, origine, destination)
-    
-    temps_decharge_80 = 80/taux_decharge[type_vehicule][categorie_transport]
-    niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][categorie_transport]*temps_chemin
+
+    temps_decharge_80 = 80/taux_decharge[type_vehicule][risque_transport]
+    niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][risque_transport]*temps_chemin
 
     chemin_trouve = False
     
@@ -71,7 +54,7 @@ def plusCourtChemin(categorie_transport, origine, destination, type_vehicule=Veh
             if (temps_a_partir_origine < temps_decharge_80 and BorneRecharge[clsc]):
                 print("On recharge a la borne : " + str(clsc))
                 temps_ici_destination = temps_chemin - temps_a_partir_origine
-                niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][categorie_transport]*temps_ici_destination
+                niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][risque_transport]*temps_ici_destination
                 temps_chemin += 120
                 chemin_trouve = True
                 break
@@ -79,7 +62,7 @@ def plusCourtChemin(categorie_transport, origine, destination, type_vehicule=Veh
         chemin_trouve = True
 
     if(not chemin_trouve and type_vehicule is Vehicule.NINH):
-        plusCourtChemin(categorie_transport,origine,destination,Vehicule.LIion)
+        plusCourtChemin(risque_transport,origine,destination,Vehicule.LIion)
 
     if(chemin_trouve):
         return[chemin, temps_chemin, type_vehicule, niveau_batterie_finale]
@@ -129,14 +112,14 @@ def algoDijkstra(graphe, origine, destination):
     chemin = chemin[::-1]
     return (chemin, plus_courts_chemins[destination][1])
   
-def extraireSousGraphe(transport_category, origin, type_vehicule=Vehicule.NINH):
+def extraireSousGraphe(transport_category, origin, type_vehicule=Vehicule.NI_MH):
     
     graphe = GrapheCLSCs
     longest_paths = {origin : (None, 0)}
     current_node = origin
     visited = set()
 
-    time_to_consume_80 = 80/battery_cost[type_vehicule][transport_category]
+    time_to_consume_80 = 80/taux_decharge[type_vehicule][transport_category]
 
     while(longest_paths[current_node][1] < time_to_consume_80):
         visited.add(current_node)
