@@ -2,10 +2,13 @@ from menu import menu
 
 def main():
     hasChargingDock, GrapheCLSCs = creerGraphe("centresLocaux.txt")
-    chemin, temps, vehicule, batterie = plusCourtChemin('faible_risque','1','15')
     
+    #result = plusCourtChemin('haut_risque','23','20')
+    result2 = extraireSousGraphe('haut_risque', '23')
+    print (result2)
+
     #lireGraphe(GrapheCLSCs)
-    print (batterie)
+    #print (batterie)
     #print(Vehicule.NINH)
     
     
