@@ -129,7 +129,7 @@ def algoDijkstra(graphe, origine, destination):
     chemin = chemin[::-1]
     return (chemin, plus_courts_chemins[destination][1])
   
-  def extraireSousGraphe(transport_category, origin, type_vehicule=Vehicule.NINH):
+def extraireSousGraphe(transport_category, origin, type_vehicule=Vehicule.NINH):
     
     graphe = GrapheCLSCs
     longest_paths = {origin : (None, 0)}
