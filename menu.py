@@ -1,8 +1,15 @@
-from graphesFunctions import creerGraphe, plusCourtChemin, lireGraphe, verifierExistenceGraphe, extraireSousGraphe
+from graphesFunctions import creerGraphe, plusCourtChemin, lireGraphe, grapheExiste, extraireSousGraphe, fichierExiste
 from enum import Enum
 from dictionnaires import *
 
 #TODO: manage les tests
+
+dictVehicule = {'1' : Vehicule.NI_MH,
+                '2' : Vehicule.LI_ion}
+
+dictRisque = {'1' : Risque.faible,
+              '2' : Risque.moyen,
+              '3' : Risque.haut}
 
 def Affichage():
     print(
@@ -20,13 +27,22 @@ def Affichage():
 
 def MiseAJour():
     updatedMap = input("Veuillez entrer une carte (avec l'extension .txt): ")
-    creerGraphe(updatedMap)   
-    lireGraphe()                       
-    #print("Mise à jour de la carte!")   #dans son fichier              
+
+    if fichierExiste(updatedMap):
+        creerGraphe(updatedMap)
+    else:
+        print ("Le nom de fichier n'existe pas")
+    
+    if grapheExiste():   
+        lireGraphe()                       
+        print("Mise à jour de la carte!")
+    else:
+        print ("Le graphe n'existe pas")
+
     menu()
 
 def CheminPlusCourtSecuritaire():
-    if not verifierExistenceGraphe():
+    if not grapheExiste():
         print ("Veuillez d'abord mettre une carte à jour!")
         menu()
     else:
@@ -39,15 +55,13 @@ def CheminPlusCourtSecuritaire():
 
         origine = input("Veuillez entrer l'origine: ")                 #gestion de lerreur sur un noeud non-existant
         destination = input("Veuillez entrer la destination: ")        #gestion de lerreur sur un noeud non-existant
-        test1 = Risque.haut
-        test2 = '1'
-        test3 = '15'
-        path = plusCourtChemin(test1, test2, test3)
-        print(path)
+
+        path = plusCourtChemin(dictRisque[transport], origine, destination)
+        print(path)         #print plus complexe a faire
         menu()
 
 def ExtraireSousGraphe():
-    if not verifierExistenceGraphe():
+    if not grapheExiste():
         print ("Veuillez d'abord mettre une carte à jour!")
         menu()
     else:
@@ -55,21 +69,17 @@ def ExtraireSousGraphe():
         node = input("Veuillez entrer l'indice du sommet: ")     #gestion de lerreur sur un noeud non-existant
 
         while vehicle not in Vehicule.__members__:   
-            vehicle = input("Veuillez entrer le type de véhicule (Ni-MH ou Li-ion): ")
+            vehicle = input("Veuillez entrer le type de véhicule (1: Ni-MH, 2: Li-ion): ")
             if vehicle not in Vehicule.__members__:    
                 print("Ceci n'est pas un option!")
 
         while patient not in Risque.__members__:
-            patient = input("Veuillez entrer le type de patient (faible: faible risque, moyen: moyen risque, haut: haut risque): ")
+            patient = input("Veuillez entrer le type de patient (1: faible risque, 2: moyen risque, 3: haut risque): ")
             if patient not in Risque.__members__:    
                 print("Ceci n'est pas un option!")
 
-        test4 = Risque.haut
-        test5 = '1'
-        test6 = Vehicule.LI_ion
-
-        sousGraphe = extraireSousGraphe(test4, test5, test6)
-        print(sousGraphe)
+        sousGraphe = extraireSousGraphe(dictRisque[patient], node, dictVehicule[vehicle])
+        print(sousGraphe)        #print plus complexe a faire
         menu()
 
 def Quitter():
