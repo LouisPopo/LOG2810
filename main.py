@@ -15,7 +15,8 @@ fakeDict = {
 def main():
     creerGraphe("centresLocaux.txt")
     
-    trouverPlusCourtCheminAvecBorneRecharge(115,'1','23')
-    
+    resultat = plusCourtChemin(Risque.haut, '23', '27')
+    lireGraphe()
+    print(resultat)
     
 main()

@@ -26,13 +26,6 @@ def grapheExiste():
         return True
     return False
 
-#Vérifie si le fichierexiste
-#Retourne un Boolean
-def fichierExiste(nomFichier):
-    if(os.path.isfile(nomFichier)):
-        return True
-    return False
-
 # Parametre : chemin vers le fichier
 # Si le chemin est valide, il cree un Graphe, sinon imprime Erreur
 # Ne retourne Rien
@@ -63,23 +56,28 @@ def creerGraphe( nomFichier):
         GrapheCLSCs[noeudA][noeudB] = int(cout)
         GrapheCLSCs[noeudB][noeudA] = int(cout)
 
-# Si le GrapheCLSCs existe, il l'imprime, sinon imprime Erreur
+# Si le GrapheCLSCs existe, il l'imprime
 def lireGraphe():
+    print("Noeud : { Voisin_1 : duree, Voisin_2 : duree, ... }")
     for node in GrapheCLSCs:
-        print(node)
-        print (GrapheCLSCs[node])
+        print (str(node) + " : " + str(GrapheCLSCs[node]))
 
 # Parametres : Risque.type, le noeud d'origine et la destinatinons (en string)
-# Retourne [[chemin], temps total, Vehicule.type, niveau batterie finale]
+# Retourne un dictionnaire : (Chemin : [liste], TempsTotal : int, Batterie : int, Vehicule : Vehicule)
+# OU None si impossible
 def plusCourtChemin(risque_transport, origine, destination, type_vehicule = Vehicule.NI_MH):
 
     chemin, temps_chemin = algoDijkstra(origine, destination)
 
-    temps_decharge_80 = 80/taux_decharge[type_vehicule][risque_transport]
-    niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][risque_transport]*temps_chemin
+    tauxDecharge = dictTauxDecharge[type_vehicule][risque_transport]
+
+    temps_decharge_80 = 80/tauxDecharge
+    niveau_batterie_finale = BATTERIE_PLEINE - tauxDecharge*temps_chemin
 
     chemin_trouve = False
     
+    resultat = None
+
     # Si la voiture se decharge avant d'arriver
     if(temps_chemin > temps_decharge_80):
         #On parcourt le chemin dans le sens inverse, et on trouve la premiere CLSC, ou on peut se recharger
@@ -87,29 +85,35 @@ def plusCourtChemin(risque_transport, origine, destination, type_vehicule = Vehi
             if (temps_a_partir_origine < temps_decharge_80 and BorneRecharge[clsc]):
                 print("On recharge a la borne : " + str(clsc))
                 temps_ici_destination = temps_chemin - temps_a_partir_origine
-                niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][risque_transport]*temps_ici_destination
+                niveau_batterie_finale = BATTERIE_PLEINE - tauxDecharge*temps_ici_destination
                 temps_chemin += TEMPS_RECHARGE
                 chemin_trouve = True
                 break
     else:
         chemin_trouve = True
+    
+    resultat = {
+        'Chemin' : creerListeChemin(chemin),
+        'TempsTotal' : temps_chemin,
+        'Batterie' : niveau_batterie_finale,
+        'Vehicule' : type_vehicule
+    }
 
     # Si la voiture se decharge en chemin, et qu'il n'y a pas de Bornes,
     # On calcule le plus court chemin de origine jusqua toutes les bornes de recharge ET
     # le plus cours chemin de toutes les bornes de recharge jusqu'a destination
     if(not chemin_trouve):
-        trouverPlusCourtCheminAvecBorneRecharge(temps_decharge_80, origine, destination)
+        print('Chemin le plus court ne contient pas de bornes de recharge')
+        resultat = trouverPlusCourtCheminAvecBorneRecharge(temps_decharge_80, origine, destination, tauxDecharge)
+        resultat['Vehicule'] = type_vehicule
     # doit retourner qqchose ici ----
 
     # Si on ne trouve toujours pas de chemin possible avec le vehicule NI-MH, on essaye avec
     # un vehicule LI-ion
-    if(not chemin_trouve and type_vehicule is Vehicule.NINH):
-        plusCourtChemin(risque_transport,origine,destination,Vehicule.LIion)
+    if(resultat == None and type_vehicule == Vehicule.NI_MH):
+        plusCourtChemin(risque_transport,origine,destination,Vehicule.LI_ion)
 
-    if(chemin_trouve):
-        return[chemin, temps_chemin, type_vehicule, niveau_batterie_finale]
-    else:
-        return None
+    return resultat
 
 # Retourne un tuple (set [noeud : temps a partir d'origine], temps total)
 def algoDijkstra(origine, destination):
@@ -153,8 +157,9 @@ def algoDijkstra(origine, destination):
     chemin = chemin[::-1]
     return (chemin, plus_courts_chemins[destination][1])
 
-# Retourne un tupe (set [noeud : temps a partir d'origine], temps total)
-def trouverPlusCourtCheminAvecBorneRecharge(temps_decharge_80, origine, destination):
+# Retourne un dictionnaire (Chemin : [liste], TempsTotal : int, Batterie : int)
+# OU None si impossible
+def trouverPlusCourtCheminAvecBorneRecharge(temps_decharge_80, origine, destination, tauxDecharge):
     # On prend toutes les CLSCs qui ont des bornes de recharge
     idsCLSCsAvecBorne = list(filter(BorneRecharge.get, BorneRecharge))
      
@@ -182,23 +187,35 @@ def trouverPlusCourtCheminAvecBorneRecharge(temps_decharge_80, origine, destinat
     tempsMinimal = float('inf')
 
     # A ce moment, cheminsOrigineDestinationAvecBorne est une liste de tuple
-    # Un peu le bordel icite...
+
+    resultat = None
 
     for cheminTotal in cheminsOrigineDestinationAvecBorne:
         tempsOrigineBorne = cheminTotal[0][1]
-        cheminOrigineBorne = cheminTotal[0][0]
         tempsBorneDestination = cheminTotal[1][1]
-        cheminBorneDestination = cheminTotal[1][0]
         tempsTotal = tempsOrigineBorne + tempsBorneDestination + TEMPS_RECHARGE
-        cheminTotal = cheminOrigineBorne + cheminBorneDestination
-        print(cheminTotal)
-        
-        if (tempsTotal < tempsMinimal):
+
+        if tempsBorneDestination < temps_decharge_80 and tempsTotal < tempsMinimal:
             tempsMinimal = tempsTotal
+            cheminOrigineBorne = creerListeChemin(cheminTotal[0][0])[:-1]
+            cheminBorneDestination = creerListeChemin(cheminTotal[1][0])
+            cheminTotal = cheminOrigineBorne + cheminBorneDestination
+            niveauBatterie = BATTERIE_PLEINE - tempsBorneDestination*tauxDecharge
+            resultat = {
+                'Chemin' : cheminTotal,
+                'TempsTotal' : tempsTotal,
+                'Batterie' : niveauBatterie
+            }
         
 
-    print(cheminsOrigineDestinationAvecBorne)
+    return(resultat)
 
+# Transfomre une liste de Tuples(CLSC, tempsAPartirOrignie) en liste de [CLSCs]
+def creerListeChemin(listeTupleCheminTemps):
+    resultat = []
+    for noeudTemps in listeTupleCheminTemps:
+        resultat.append(noeudTemps[0])
+    return resultat
 
 # Parametres : Risque.type, noeud origine et destination (en string), et Vehicule.Type
 # Retourne [[chemin], temps total]
