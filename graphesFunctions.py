@@ -129,46 +129,86 @@ def algoDijkstra(graphe, origine, destination):
     chemin = chemin[::-1]
     return (chemin, plus_courts_chemins[destination][1])
   
-  def extraireSousGraphe(transport_category, origin, type_vehicule=Vehicule.NINH):
-    
+
+def extraireSousGraphe(categorie_transport, origine, type_vehicule=Vehicule.NINH):
     graphe = GrapheCLSCs
-    longest_paths = {origin : (None, 0)}
-    current_node = origin
-    visited = set()
+    noeud_courant = origine
+    noeud_precedent = None
+    temps_decharge_80 = 80/taux_decharge[type_vehicule][categorie_transport]
 
-    time_to_consume_80 = 80/battery_cost[type_vehicule][transport_category]
+    chemins_possibles = trouverCheminsPossibles(noeud_precedent, noeud_courant, temps_decharge_80, graphe, 0)
 
-    while(longest_paths[current_node][1] < time_to_consume_80):
-        visited.add(current_node)
+    plusLongChemin = max(chemins_possibles, key=lambda k:chemins_possibles[k][k][1])
+    return [chemins_possibles[plusLongChemin][0], chemins_possibles[plusLongChemin][1]]
 
-        current_time = longest_paths[current_node][1]
 
-        #on parcourt tous les voisins du noeud courant
-        for neighbour in graphe[current_node]:
-            time_from_origin_to_neighbour = graphe[current_node][neighbour] + current_time
-
-            if neighbour not in longest_paths:
-                longest_paths[neighbour] = (current_node, time_from_origin_to_neighbour)
-            else:
-                current_longest_time = longest_paths[neighbour][1]
-                if time_from_origin_to_neighbour > current_longest_time:
-                    if longest_paths[neighbour][0] not in visited:
-                        if longest_paths[neighbour][0] != None:
-                            longest_paths[neighbour] = (current_node, time_from_origin_to_neighbour)
-
-        next_destinations = {node : longest_paths[node] for node in longest_paths if node not in visited }
-        if(next_destinations):
-            current_node = max(next_destinations, key=lambda k:next_destinations[k][1])
+def trouverCheminsPossibles(noeud_precedent, noeud_courant, temps_decharge_80, graphe, chemin_actuel):
+    
+    for voisin in graphe[noeud_courant][voisin]:
+        chemins_possibles = {} #{0 : [[1,2,3,4], temps], 1: [[5,6,7], temps2]}
+        voisins = []
+        #Met tous les voisins dans voisins[] et enlever les noeuds deja visites
+        
+        for voisin in graphe[noeud_courant][voisin]:
+            voisins.append(voisin)
+        for voisin in voisins:
+            if voisin in chemins_possibles[chemin_actuel][0]:
+                voisins.remove(voisin)
+        
+        if voisins:
+            for voisin in voisins:
+                if (chemins_possibles[chemin_actuel][1] <= temps_decharge_80):
+                    chemins_possibles[chemin_actuel][0].append(noeud_courant)
+                    chemins_possibles[chemin_actuel][1] += graphe[noeud_precedent][noeud_courant]
+                    noeud_precedent = noeud_courant
+                    noeud_courant = voisin
         else:
-            breaks
+            chemin_actuel += 1
+    
+    return chemins_possibles
 
-    path = []
 
-    while current_node is not None:
-        path.append((current_node, longest_paths[current_node][1]))
-        next_node = longest_paths[current_node][0]
-        current_node = next_node
 
-    path = path[::-1]
+    # graphe = GrapheCLSCs
+    # plus_longs_chemins = {origine : (None, 0)}
+    # noeud_courant = origine
+    # noeuds_visites = set()
 
-    return [path, current_time]
+    # temps_decharge_80 = 80/taux_decharge[type_vehicule][categorie_transport]
+
+    # while(plus_longs_chemins[noeud_courant][1] < temps_decharge_80):
+    #     noeuds_visites.add(noeud_courant)
+
+    #     temps_actuel = plus_longs_chemins[noeud_courant][1]
+
+    #     #on parcourt tous les voisins du noeud courant
+    #     for voisin in graphe[noeud_courant]:
+    #         temps_origine_a_voisin = graphe[noeud_courant][voisin] + temps_actuel
+
+    #         if voisin not in plus_longs_chemins:
+    #             plus_longs_chemins[voisin] = (noeud_courant, temps_origine_a_voisin)
+    #         else:
+    #             temps_maximal_actuel = plus_longs_chemins[voisin][1]
+    #             if temps_origine_a_voisin > temps_maximal_actuel:
+    #                 if plus_longs_chemins[voisin][0] not in noeuds_visites:
+    #                     if plus_longs_chemins[voisin][0] != None:
+    #                         plus_longs_chemins[voisin] = (noeud_courant, temps_origine_a_voisin)
+
+    #     prochains_noeuds = {noeud : plus_longs_chemins[noeud] for noeud in plus_longs_chemins if noeud not in noeuds_visites }
+    #     if(prochains_noeuds):
+    #         noeud_courant = max(prochains_noeuds, key=lambda k:prochains_noeuds[k][1])
+    #     else:
+    #         break
+
+    # chemin = []
+
+    # while noeud_courant is not None:
+    #     chemin.append((noeud_courant, plus_longs_chemins[noeud_courant][1]))
+    #     prochain_noeud = plus_longs_chemins[noeud_courant][0]
+    #     noeud_courant = prochain_noeud
+
+    # chemin = chemin[::-1]
+
+    # return [chemin, temps_actuel]
+
+    
