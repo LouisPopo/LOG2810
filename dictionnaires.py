@@ -9,6 +9,8 @@ class Risque(Enum):
     moyen = 'Moyen Risque'
     haut = 'Haut Risque'
 
+#Dictionnaires pour graphesFonctions.py
+
 taux_decharge = {
     Vehicule.NI_MH : {
         Risque.faible : (6/60),
@@ -22,3 +24,12 @@ taux_decharge = {
         Risque.haut : (30/60)
     }
 }
+
+#Dictionnaires pour le Menu
+
+dictVehicule = {'1' : Vehicule.NI_MH,
+                '2' : Vehicule.LI_ion}
+
+dictRisque = {'1' : Risque.faible,
+              '2' : Risque.moyen,
+              '3' : Risque.haut}

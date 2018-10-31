@@ -9,6 +9,15 @@ BATTERIE_PLEINE = 100
 # Dictionnaire avec les CLSCs qui ont des bornes de recharge et le Graphe de toutes les CLSCs
 BorneRecharge, GrapheCLSCs = dict(), dict()
 
+def fichierExiste(nomFichier):
+    return os.path.isfile(nomFichier)
+
+#Verifie si le noeud existe
+def noeudExiste(noeud):
+    if noeud in GrapheCLSCs:
+        return True
+    return False
+
 # Verifie si le graphe Existe
 # Retourne un Boolean
 def grapheExiste():
@@ -19,7 +28,7 @@ def grapheExiste():
 # Parametre : chemin vers le fichier
 # Si le chemin est valide, il cree un Graphe, sinon imprime Erreur
 # Ne retourne Rien
-def creerGraphe(nomFichier):
+def creerGraphe( nomFichier):
     
     BorneRecharge.clear()
     GrapheCLSCs.clear()
@@ -37,7 +46,7 @@ def creerGraphe(nomFichier):
 
     for ligne in listeBornes:
         numeroCLSC, aUneCharge = ligne.split(',')
-        BorneRecharge[numeroCLSC] = aUneCharge
+        BorneRecharge[numeroCLSC] = (aUneCharge == '1')
 
     for ligne in listeArcs:
         noeudA, noeudB, cout = ligne.split(',')
@@ -80,6 +89,12 @@ def plusCourtChemin(risque_transport, origine, destination, type_vehicule = Vehi
                 break
     else:
         chemin_trouve = True
+
+    # Si la voiture se decharge en chemin, et qu'il n'y a pas de Bornes,
+    # On calcule le plus court chemin de originr jusqua toutes les bornes de recharge ET
+    # le plus cours chemin de toutes les bornes de recharge jusqu'a destination
+    if(not chemin_trouve):
+        trouverPlusCourtCheminAvecBorneRecharge(temps_decharge_80, origine, destination)
 
     if(not chemin_trouve and type_vehicule is Vehicule.NINH):
         plusCourtChemin(risque_transport,origine,destination,Vehicule.LIion)
@@ -130,6 +145,19 @@ def algoDijkstra(origine, destination):
     #on inverse l'ordre du tableau
     chemin = chemin[::-1]
     return (chemin, plus_courts_chemins[destination][1])
+
+def trouverPlusCourtCheminAvecBorneRecharge(temps_decharge_80, origine, destination):
+    idsCLSCsAvecBorne = list(filter(BorneRecharge.get, BorneRecharge))
+
+    cheminsOrigineBornes = []
+
+    for clsc in idsCLSCsAvecBorne:
+        chemin = algoDijkstra(origine,clsc)
+        cheminsOrigineBornes.append(chemin)
+
+    for thing in cheminsOrigineBornes:
+        print(thing)
+
 
 # Parametres : Risque.type, noeud origine et destination (en string), et Vehicule.Type
 # Retourne [[chemin], temps total]

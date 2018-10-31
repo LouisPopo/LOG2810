@@ -4,16 +4,12 @@ from dictionnaires import *
 
 #TODO: manage les tests
 
-dictVehicule = {'1' : Vehicule.NI_MH,
-                '2' : Vehicule.LI_ion}
 
-dictRisque = {'1' : Risque.faible,
-              '2' : Risque.moyen,
-              '3' : Risque.haut}
 
 def Affichage():
     print(
 '''
+
 **************************************************
 *                    Choix:                      *
 **************************************************
@@ -22,6 +18,7 @@ def Affichage():
 * c) Extraire un sous-graphe                     *
 * d) Quitter                                     *
 **************************************************
+
 '''
     )
 
