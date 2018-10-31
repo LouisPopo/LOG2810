@@ -25,6 +25,13 @@ def grapheExiste():
         return True
     return False
 
+#Vérifie si le fichierexiste
+#Retourne un Boolean
+def fichierExiste(nomFichier):
+    if(os.path.isfile(nomFichier)):
+        return True
+    return False
+
 # Parametre : chemin vers le fichier
 # Si le chemin est valide, il cree un Graphe, sinon imprime Erreur
 # Ne retourne Rien
@@ -32,10 +39,6 @@ def creerGraphe( nomFichier):
     
     BorneRecharge.clear()
     GrapheCLSCs.clear()
-
-    if(not os.path.isfile(nomFichier)):
-        print ("Le nom de fichier n'existe pas")
-        return
     
     fichier = open(nomFichier,"r").read()
 
