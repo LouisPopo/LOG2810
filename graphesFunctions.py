@@ -1,19 +1,41 @@
 import collections
-from enum import Enum
+from dictionnaires import *
+import os.path
 
 FIN_DE_LIGNE = "\n"
 LIGNE_VIDE = "\n\n"
 BATTERIE_PLEINE = 100
+TEMPS_RECHARGE = 120
 
-class Vehicule(Enum):
-    NINH = 'NI-NH'
-    LIion = 'LI-ion'
-
+# Dictionnaire avec les CLSCs qui ont des bornes de recharge et le Graphe de toutes les CLSCs
 BorneRecharge, GrapheCLSCs = dict(), dict()
 
-def creerGraphe(nomFichier):
-    fichier = open(nomFichier,"r").read()
+def fichierExiste(nomFichier):
+    return os.path.isfile(nomFichier)
+
+#Verifie si le noeud existe
+def noeudExiste(noeud):
+    if noeud in GrapheCLSCs:
+        return True
+    return False
+
+# Verifie si le graphe Existe
+# Retourne un Boolean
+def grapheExiste():
+    if (GrapheCLSCs):
+        return True
+    return False
+
+# Parametre : chemin vers le fichier
+# Si le chemin est valide, il cree un Graphe, sinon imprime Erreur
+# Ne retourne Rien
+def creerGraphe( nomFichier):
     
+    BorneRecharge.clear()
+    GrapheCLSCs.clear()
+    
+    fichier = open(nomFichier,"r").read()
+
     bornesCLSC , arcs = fichier.split(LIGNE_VIDE)
 
     listeBornes = bornesCLSC.split(FIN_DE_LIGNE)
@@ -21,7 +43,7 @@ def creerGraphe(nomFichier):
 
     for ligne in listeBornes:
         numeroCLSC, aUneCharge = ligne.split(',')
-        BorneRecharge[numeroCLSC] = aUneCharge
+        BorneRecharge[numeroCLSC] = (aUneCharge == '1')
 
     for ligne in listeArcs:
         noeudA, noeudB, cout = ligne.split(',')
@@ -34,36 +56,28 @@ def creerGraphe(nomFichier):
         GrapheCLSCs[noeudA][noeudB] = int(cout)
         GrapheCLSCs[noeudB][noeudA] = int(cout)
 
-    return BorneRecharge,GrapheCLSCs
+# Si le GrapheCLSCs existe, il l'imprime
+def lireGraphe():
+    print("Noeud : { Voisin_1 : duree, Voisin_2 : duree, ... }")
+    for node in GrapheCLSCs:
+        print (str(node) + " : " + str(GrapheCLSCs[node]))
 
-def lireGraphe(graphe):
-    for node in graphe:
-        print(node)
-        print (graphe[node])
-   
-taux_decharge = {
-    Vehicule.NINH : {
-        'faible_risque' : (6/60),
-        'moyen_risque' : (12/60),
-        'haut_risque' : (48/60)
-    },
+# Parametres : Risque.type, le noeud d'origine et la destinatinons (en string)
+# Retourne un dictionnaire : (Chemin : [liste], TempsTotal : int, Batterie : int, Vehicule : Vehicule)
+# OU None si impossible
+def plusCourtChemin(risque_transport, origine, destination, type_vehicule = Vehicule.NI_MH):
 
-    Vehicule.LIion : {
-        'faible_risque' : (5/60),
-        'moyen_risque' : (10/60),
-        'haut_risque' : (30/60)
-    }
-}
+    chemin, temps_chemin = algoDijkstra(origine, destination)
 
-#return [chemin, temps total, type vehicule, niveau batterie finale]
-def plusCourtChemin(categorie_transport, origine, destination, type_vehicule=Vehicule.NINH):
-    chemin, temps_chemin = algoDijkstra(GrapheCLSCs, origine, destination)
-    
-    temps_decharge_80 = 80/taux_decharge[type_vehicule][categorie_transport]
-    niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][categorie_transport]*temps_chemin
+    tauxDecharge = dictTauxDecharge[type_vehicule][risque_transport]
+
+    temps_decharge_80 = 80/tauxDecharge
+    niveau_batterie_finale = BATTERIE_PLEINE - tauxDecharge*temps_chemin
 
     chemin_trouve = False
     
+    resultat = None
+
     # Si la voiture se decharge avant d'arriver
     if(temps_chemin > temps_decharge_80):
         #On parcourt le chemin dans le sens inverse, et on trouve la premiere CLSC, ou on peut se recharger
@@ -71,24 +85,38 @@ def plusCourtChemin(categorie_transport, origine, destination, type_vehicule=Veh
             if (temps_a_partir_origine < temps_decharge_80 and BorneRecharge[clsc]):
                 print("On recharge a la borne : " + str(clsc))
                 temps_ici_destination = temps_chemin - temps_a_partir_origine
-                niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][categorie_transport]*temps_ici_destination
-                temps_chemin += 120
+                niveau_batterie_finale = BATTERIE_PLEINE - tauxDecharge*temps_ici_destination
+                temps_chemin += TEMPS_RECHARGE
                 chemin_trouve = True
                 break
     else:
         chemin_trouve = True
+    
+    resultat = {
+        'Chemin' : creerListeChemin(chemin),
+        'TempsTotal' : temps_chemin,
+        'Batterie' : niveau_batterie_finale,
+        'Vehicule' : type_vehicule
+    }
 
-    if(not chemin_trouve and type_vehicule is Vehicule.NINH):
-        plusCourtChemin(categorie_transport,origine,destination,Vehicule.LIion)
+    # Si la voiture se decharge en chemin, et qu'il n'y a pas de Bornes,
+    # On calcule le plus court chemin de origine jusqua toutes les bornes de recharge ET
+    # le plus cours chemin de toutes les bornes de recharge jusqu'a destination
+    if(not chemin_trouve):
+        print('Chemin le plus court ne contient pas de bornes de recharge')
+        resultat = trouverPlusCourtCheminAvecBorneRecharge(temps_decharge_80, origine, destination, tauxDecharge)
+        resultat['Vehicule'] = type_vehicule
+    # doit retourner qqchose ici ----
 
-    if(chemin_trouve):
-        return[chemin, temps_chemin, type_vehicule, niveau_batterie_finale]
-    else:
-        print("Impossible")
-        return None
+    # Si on ne trouve toujours pas de chemin possible avec le vehicule NI-MH, on essaye avec
+    # un vehicule LI-ion
+    if(resultat == None and type_vehicule == Vehicule.NI_MH):
+        plusCourtChemin(risque_transport,origine,destination,Vehicule.LI_ion)
 
-# returns a tuple (set [node : time from origin], total time)
-def algoDijkstra(graphe, origine, destination):
+    return resultat
+
+# Retourne un tuple (set [noeud : temps a partir d'origine], temps total)
+def algoDijkstra(origine, destination):
     # le tuple est (previous_node, time_from_origin)
     plus_courts_chemins = {origine : (None, 0)}
     
@@ -101,8 +129,8 @@ def algoDijkstra(graphe, origine, destination):
         temps_origine_a_courant = plus_courts_chemins[noeud_courant][1]
 
         #on parcourt tous les voisins du noeud courant
-        for voisin in graphe[noeud_courant]:
-            temps_origine_a_voisin = graphe[noeud_courant][voisin] + temps_origine_a_courant
+        for voisin in GrapheCLSCs[noeud_courant]:
+            temps_origine_a_voisin = GrapheCLSCs[noeud_courant][voisin] + temps_origine_a_courant
 
             if voisin not in plus_courts_chemins:
                 plus_courts_chemins[voisin] = (noeud_courant, temps_origine_a_voisin)
@@ -128,8 +156,72 @@ def algoDijkstra(graphe, origine, destination):
     #on inverse l'ordre du tableau
     chemin = chemin[::-1]
     return (chemin, plus_courts_chemins[destination][1])
-  
 
+# Retourne un dictionnaire (Chemin : [liste], TempsTotal : int, Batterie : int)
+# OU None si impossible
+def trouverPlusCourtCheminAvecBorneRecharge(temps_decharge_80, origine, destination, tauxDecharge):
+    # On prend toutes les CLSCs qui ont des bornes de recharge
+    idsCLSCsAvecBorne = list(filter(BorneRecharge.get, BorneRecharge))
+     
+    cheminsOrigineBornes = []
+
+    for clsc in idsCLSCsAvecBorne:
+        if clsc != origine:
+            chemin = algoDijkstra(origine,clsc)
+            if(chemin[1] < temps_decharge_80):
+                cheminsOrigineBornes.append(chemin)
+
+
+    cheminsOrigineDestinationAvecBorne = []
+
+    for cheminJusquaBorneEtTemps in cheminsOrigineBornes:
+        idBorne = cheminJusquaBorneEtTemps[0][-1][0]    # On prend le premier element du tuple, qui est une liste, 
+                                                        # de laquelle on prend le dernier element, qui est un autre tuple 
+                                                        # (noeud, temps a partir d'origine ), duquel on prend le noeud seulement
+
+        borneJusquaDestination = algoDijkstra(idBorne,destination)
+        if(borneJusquaDestination[1] < temps_decharge_80):
+            cheminsOrigineDestinationAvecBorne.append((cheminJusquaBorneEtTemps,borneJusquaDestination))
+
+    
+    tempsMinimal = float('inf')
+
+    # A ce moment, cheminsOrigineDestinationAvecBorne est une liste de tuple
+
+    resultat = None
+
+    for cheminTotal in cheminsOrigineDestinationAvecBorne:
+        tempsOrigineBorne = cheminTotal[0][1]
+        tempsBorneDestination = cheminTotal[1][1]
+        tempsTotal = tempsOrigineBorne + tempsBorneDestination + TEMPS_RECHARGE
+
+        if tempsBorneDestination < temps_decharge_80 and tempsTotal < tempsMinimal:
+            tempsMinimal = tempsTotal
+            cheminOrigineBorne = creerListeChemin(cheminTotal[0][0])[:-1]
+            cheminBorneDestination = creerListeChemin(cheminTotal[1][0])
+            cheminTotal = cheminOrigineBorne + cheminBorneDestination
+            niveauBatterie = BATTERIE_PLEINE - tempsBorneDestination*tauxDecharge
+            resultat = {
+                'Chemin' : cheminTotal,
+                'TempsTotal' : tempsTotal,
+                'Batterie' : niveauBatterie
+            }
+        
+
+    return(resultat)
+
+# Transfomre une liste de Tuples(CLSC, tempsAPartirOrignie) en liste de [CLSCs]
+def creerListeChemin(listeTupleCheminTemps):
+    resultat = []
+    for noeudTemps in listeTupleCheminTemps:
+        resultat.append(noeudTemps[0])
+    return resultat
+
+
+
+
+# Parametres : Risque.type, noeud origine et destination (en string), et Vehicule.Type
+# Retourne [[chemin], temps total]
 def extraireSousGraphe(categorie_transport, origine, type_vehicule=Vehicule.NINH):
     graphe = GrapheCLSCs
     noeud_courant = origine
