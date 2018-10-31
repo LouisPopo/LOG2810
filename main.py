@@ -1,8 +1,21 @@
+from graphesFunctions import *
 from menu import menu
 from dictionnaires import *
-from enum import Enum
-from graphesFunctions import *
+
+GrapheCLSCs = None
+
+fakeDict = {
+    'A' : {'B':1,'D':5},
+    'B' : {'A':1,'C':5,'E':1},
+    'C' : {'B':5, 'D':3},
+    'D' : {'A':3,'E':4},
+    'E' : {'B':4,'D':1}
+}
 
 def main():
-    menu()
+    creerGraphe("centresLocaux.txt")
+    
+    trouverPlusCourtCheminAvecBorneRecharge(115,'1','23')
+    
+    
 main()

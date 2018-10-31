@@ -5,6 +5,7 @@ import os.path
 FIN_DE_LIGNE = "\n"
 LIGNE_VIDE = "\n\n"
 BATTERIE_PLEINE = 100
+TEMPS_RECHARGE = 120
 
 # Dictionnaire avec les CLSCs qui ont des bornes de recharge et le Graphe de toutes les CLSCs
 BorneRecharge, GrapheCLSCs = dict(), dict()
@@ -87,18 +88,21 @@ def plusCourtChemin(risque_transport, origine, destination, type_vehicule = Vehi
                 print("On recharge a la borne : " + str(clsc))
                 temps_ici_destination = temps_chemin - temps_a_partir_origine
                 niveau_batterie_finale = BATTERIE_PLEINE - taux_decharge[type_vehicule][risque_transport]*temps_ici_destination
-                temps_chemin += 120
+                temps_chemin += TEMPS_RECHARGE
                 chemin_trouve = True
                 break
     else:
         chemin_trouve = True
 
     # Si la voiture se decharge en chemin, et qu'il n'y a pas de Bornes,
-    # On calcule le plus court chemin de originr jusqua toutes les bornes de recharge ET
+    # On calcule le plus court chemin de origine jusqua toutes les bornes de recharge ET
     # le plus cours chemin de toutes les bornes de recharge jusqu'a destination
     if(not chemin_trouve):
         trouverPlusCourtCheminAvecBorneRecharge(temps_decharge_80, origine, destination)
+    # doit retourner qqchose ici ----
 
+    # Si on ne trouve toujours pas de chemin possible avec le vehicule NI-MH, on essaye avec
+    # un vehicule LI-ion
     if(not chemin_trouve and type_vehicule is Vehicule.NINH):
         plusCourtChemin(risque_transport,origine,destination,Vehicule.LIion)
 
@@ -149,17 +153,51 @@ def algoDijkstra(origine, destination):
     chemin = chemin[::-1]
     return (chemin, plus_courts_chemins[destination][1])
 
+# Retourne un tupe (set [noeud : temps a partir d'origine], temps total)
 def trouverPlusCourtCheminAvecBorneRecharge(temps_decharge_80, origine, destination):
+    # On prend toutes les CLSCs qui ont des bornes de recharge
     idsCLSCsAvecBorne = list(filter(BorneRecharge.get, BorneRecharge))
-
+     
     cheminsOrigineBornes = []
 
     for clsc in idsCLSCsAvecBorne:
-        chemin = algoDijkstra(origine,clsc)
-        cheminsOrigineBornes.append(chemin)
+        if clsc != origine:
+            chemin = algoDijkstra(origine,clsc)
+            if(chemin[1] < temps_decharge_80):
+                cheminsOrigineBornes.append(chemin)
 
-    for thing in cheminsOrigineBornes:
-        print(thing)
+
+    cheminsOrigineDestinationAvecBorne = []
+
+    for cheminJusquaBorneEtTemps in cheminsOrigineBornes:
+        idBorne = cheminJusquaBorneEtTemps[0][-1][0]    # On prend le premier element du tuple, qui est une liste, 
+                                                        # de laquelle on prend le dernier element, qui est un autre tuple 
+                                                        # (noeud, temps a partir d'origine ), duquel on prend le noeud seulement
+
+        borneJusquaDestination = algoDijkstra(idBorne,destination)
+        if(borneJusquaDestination[1] < temps_decharge_80):
+            cheminsOrigineDestinationAvecBorne.append((cheminJusquaBorneEtTemps,borneJusquaDestination))
+
+    
+    tempsMinimal = float('inf')
+
+    # A ce moment, cheminsOrigineDestinationAvecBorne est une liste de tuple
+    # Un peu le bordel icite...
+
+    for cheminTotal in cheminsOrigineDestinationAvecBorne:
+        tempsOrigineBorne = cheminTotal[0][1]
+        cheminOrigineBorne = cheminTotal[0][0]
+        tempsBorneDestination = cheminTotal[1][1]
+        cheminBorneDestination = cheminTotal[1][0]
+        tempsTotal = tempsOrigineBorne + tempsBorneDestination + TEMPS_RECHARGE
+        cheminTotal = cheminOrigineBorne + cheminBorneDestination
+        print(cheminTotal)
+        
+        if (tempsTotal < tempsMinimal):
+            tempsMinimal = tempsTotal
+        
+
+    print(cheminsOrigineDestinationAvecBorne)
 
 
 # Parametres : Risque.type, noeud origine et destination (en string), et Vehicule.Type
