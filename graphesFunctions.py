@@ -218,15 +218,13 @@ def creerListeChemin(listeTupleCheminTemps):
     return resultat
 
 
-
-
 # Parametres : Risque.type, noeud origine et destination (en string), et Vehicule.Type
 # Retourne [[chemin], temps total]
-def extraireSousGraphe(categorie_transport, origine, type_vehicule=Vehicule.NINH):
+def extraireSousGraphe(categorie_transport, origine, type_vehicule):
     graphe = GrapheCLSCs
     noeud_courant = origine
     noeud_precedent = None
-    temps_decharge_80 = 80/taux_decharge[type_vehicule][categorie_transport]
+    temps_decharge_80 = 80/dictTauxDecharge[type_vehicule][categorie_transport]
 
     chemins_possibles = trouverCheminsPossibles(noeud_precedent, noeud_courant, temps_decharge_80, graphe, 0)
 
