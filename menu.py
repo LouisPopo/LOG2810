@@ -26,10 +26,10 @@ def Affichage():
     )
 
 def MiseAJour():
-    updatedMap = input("Veuillez entrer une carte (avec l'extension .txt): ")
+    updatedMap = input("Veuillez entrer une carte (avec l'extension .txt): ") #TODO
 
-    if fichierExiste(updatedMap):
-        creerGraphe(updatedMap)
+    if fichierExiste("centresLocaux.txt"):
+        creerGraphe("centresLocaux.txt")
     else:
         print ("Le nom de fichier n'existe pas")
     
@@ -48,16 +48,22 @@ def CheminPlusCourtSecuritaire():
     else:
         transport = 0
 
-        while transport not in Risque.__members__: 
-            transport = input("Veuillez entrer la catégorie de transport (faible: faible risque, moyen: moyen risque, haut: haut risque): ")
-            if transport not in Risque.__members__:    
+        while transport not in dictRisque: 
+            transport = input("Veuillez entrer la catégorie de transport (1: faible risque, 2: moyen risque, 3: haut risque): ")
+            if transport not in dictRisque:    
                 print("Ceci n'est pas un option!")
 
         origine = input("Veuillez entrer l'origine: ")                 #gestion de lerreur sur un noeud non-existant
         destination = input("Veuillez entrer la destination: ")        #gestion de lerreur sur un noeud non-existant
 
         path = plusCourtChemin(dictRisque[transport], origine, destination)
-        print(path)         #print plus complexe a faire
+        if path is not None:
+            print("Chemin: " + path[0]) #TODO
+            print("Temps: " + path[1])
+            print("Type de véhicule: " + path[2])
+            print("Niveau de batterie final: " + path[3])   
+        else:
+            print("Ce chemin n'est pas possible!")      #print plus complexe a faire
         menu()
 
 def ExtraireSousGraphe():
@@ -68,18 +74,24 @@ def ExtraireSousGraphe():
         vehicle = patient = 0
         node = input("Veuillez entrer l'indice du sommet: ")     #gestion de lerreur sur un noeud non-existant
 
-        while vehicle not in Vehicule.__members__:   
+        while vehicle not in dictVehicule:   
             vehicle = input("Veuillez entrer le type de véhicule (1: Ni-MH, 2: Li-ion): ")
-            if vehicle not in Vehicule.__members__:    
+            if vehicle not in dictVehicule:    
                 print("Ceci n'est pas un option!")
 
-        while patient not in Risque.__members__:
+        while patient not in dictRisque:
             patient = input("Veuillez entrer le type de patient (1: faible risque, 2: moyen risque, 3: haut risque): ")
-            if patient not in Risque.__members__:    
+            if patient not in dictRisque:    
                 print("Ceci n'est pas un option!")
 
         sousGraphe = extraireSousGraphe(dictRisque[patient], node, dictVehicule[vehicle])
-        print(sousGraphe)        #print plus complexe a faire
+        if sousGraphe is not None:
+            print("Chemin: ")
+            for m in sousGraphe[0]:
+                print(sousGraphe[0][m])             #??? #TODO
+            #print("Temps: " + sousGraphe[1])        #transformer en str
+        else:
+            print("Ce sous-graphe n'existe pas!")
         menu()
 
 def Quitter():
