@@ -4,8 +4,7 @@ from dictionnaires import *
 
 #TODO: manage les tests
 
-
-
+#Affichage des choix
 def Affichage():
     print(
 '''
@@ -22,9 +21,11 @@ def Affichage():
 '''
     )
 
+#Option mise a jour
 def MiseAJour():
     updatedMap = input("Veuillez entrer une carte (avec l'extension .txt): ") #TODO
 
+    #Controle de
     if fichierExiste("centresLocaux.txt"):
         creerGraphe("centresLocaux.txt")
     else:
@@ -55,10 +56,10 @@ def CheminPlusCourtSecuritaire():
 
         path = plusCourtChemin(dictRisque[transport], origine, destination)
         if path is not None:
-            print("Chemin: " + path[0]) #TODO
-            print("Temps: " + path[1])
-            print("Type de véhicule: " + path[2])
-            print("Niveau de batterie final: " + path[3])   
+            print("\nChemin: " + str(path['Chemin'])) #TODO
+            print("Temps: " + str(path['TempsTotal']))
+            print("Type de véhicule: " + str(path['Vehicule']))
+            print("Niveau de batterie final: " + str(path['Batterie']))   
         else:
             print("Ce chemin n'est pas possible!")      #print plus complexe a faire
         menu()
