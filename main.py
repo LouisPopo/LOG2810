@@ -15,8 +15,9 @@ fakeDict = {
 def main():
     creerGraphe("centresLocaux.txt")
     
-    resultat = plusCourtChemin(Risque.haut, '23', '27')
-    resultat2 = extraireSousGraphe(Risque.haut, '23', Vehicule.NI_MH)
-    print(resultat)
-    print(resultat2)
+    #resultat = plusCourtChemin(Risque.haut, '23', '27')
+
+    a = extraireSousGraphe(Risque.faible, "28", Vehicule.LI_ion)
+    print(a)
+
 main()
