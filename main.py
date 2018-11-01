@@ -16,7 +16,7 @@ def main():
     creerGraphe("centresLocaux.txt")
     
     resultat = plusCourtChemin(Risque.haut, '23', '27')
-    lireGraphe()
+    resultat2 = extraireSousGraphe(Risque.haut, '23', Vehicule.NI_MH)
     print(resultat)
-    
+    print(resultat2)
 main()

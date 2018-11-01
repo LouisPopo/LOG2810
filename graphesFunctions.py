@@ -29,7 +29,7 @@ def grapheExiste():
 # Parametre : chemin vers le fichier
 # Si le chemin est valide, il cree un Graphe, sinon imprime Erreur
 # Ne retourne Rien
-def creerGraphe( nomFichier):
+def creerGraphe(nomFichier):
     
     BorneRecharge.clear()
     GrapheCLSCs.clear()
@@ -222,11 +222,11 @@ def creerListeChemin(listeTupleCheminTemps):
 
 # Parametres : Risque.type, noeud origine et destination (en string), et Vehicule.Type
 # Retourne [[chemin], temps total]
-def extraireSousGraphe(categorie_transport, origine, type_vehicule=Vehicule.NINH):
+def extraireSousGraphe(categorie_transport, origine, type_vehicule):
     graphe = GrapheCLSCs
     noeud_courant = origine
     noeud_precedent = None
-    temps_decharge_80 = 80/taux_decharge[type_vehicule][categorie_transport]
+    temps_decharge_80 = 80/dictTauxDecharge[type_vehicule][categorie_transport]
 
     chemins_possibles = trouverCheminsPossibles(noeud_precedent, noeud_courant, temps_decharge_80, graphe, 0)
 
@@ -236,16 +236,17 @@ def extraireSousGraphe(categorie_transport, origine, type_vehicule=Vehicule.NINH
 
 def trouverCheminsPossibles(noeud_precedent, noeud_courant, temps_decharge_80, graphe, chemin_actuel):
     
-    for voisin in graphe[noeud_courant][voisin]:
-        chemins_possibles = {} #{0 : [[1,2,3,4], temps], 1: [[5,6,7], temps2]}
+    for voisin in graphe[noeud_courant]:
         voisins = []
+        chemins_possibles = {} #{0 : [[1,2,3,4], temps], 1: [[5,6,7], temps2]}
+        for voisinAEntrer in graphe[noeud_courant]:
+            voisins.append(graphe[noeud_courant])
         #Met tous les voisins dans voisins[] et enlever les noeuds deja visites
-        
-        for voisin in graphe[noeud_courant][voisin]:
-            voisins.append(voisin)
-        for voisin in voisins:
-            if voisin in chemins_possibles[chemin_actuel][0]:
-                voisins.remove(voisin)
+        if voisin in chemins_possibles[chemin_actuel]:
+            chemin_actuel += 1
+            break
+        else:
+            voisins.append(voisinAEntrer)
         
         if voisins:
             for voisin in voisins:
