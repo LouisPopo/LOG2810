@@ -21,13 +21,13 @@ def Affichage():
 '''
     )
 
-#Option de mise a jour du graphe
+#Option a: mise a jour du graphe
 def MiseAJour():
-    grapheMisAJour = input("Veuillez entrer une carte (avec l'extension .txt): ") #TODO
+    grapheMisAJour = input("Veuillez entrer une carte (avec l'extension .txt): ")
 
     #Controle de l'erreur: On cree le graphe seulement si le fichier existe
-    if fichierExiste("centresLocaux.txt"):
-        creerGraphe("centresLocaux.txt")
+    if fichierExiste(grapheMisAJour):
+        creerGraphe(grapheMisAJour)
     else:
         print ("Le nom de fichier n'existe pas")
     
@@ -40,7 +40,7 @@ def MiseAJour():
 
     menu()
 
-#Option du chemin le plus court securitaire
+#Option b: chemin le plus court securitaire
 def CheminPlusCourtSecuritaire():
 
     #Controle de l'existance du graphe. On doit creer un graphe avant de pouvoir 
@@ -86,7 +86,7 @@ def CheminPlusCourtSecuritaire():
             print("Ce chemin n'est pas possible!")
         menu()
 
-#Option extraire un sous graphe
+#Option c: extraire un sous graphe
 def ExtraireSousGraphe():
 
     #Controle de l'existance du graphe. On doit creer un graphe avant de pouvoir 
@@ -129,13 +129,15 @@ def ExtraireSousGraphe():
             print("Ce sous-graphe n'existe pas!")
         menu()
 
-#Option quitter
+#Option d: quitter
 #On affiche la fin du programme et on retourn 0
 def Quitter():
     print("Fin du programme")
     return 0
 
 #Option menu
+#Il s'agit de la fonction appellee a la base par le main
+#Elle permet la centralisation des autres fonctions
 def menu():
 
     #Dictionnaire des options possibles
