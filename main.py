@@ -5,16 +5,16 @@ from dictionnaires import *
 GrapheCLSCs = None
 
 fakeDict = {
-    'A' : {'B':1,'D':5},
-    'B' : {'A':1,'C':5,'E':1},
-    'C' : {'B':5, 'D':3},
-    'D' : {'A':3,'E':4},
+    'A' : {'B':3,'C':2},
+    'B' : {'A':3,'C':6,'F':4},
+    'C' : {'A':5, 'B':3,'F':8},
+    'D' : {'F':12},
     'E' : {'B':4,'D':1}
 }
 
 def main():
     creerGraphe("centresLocaux.txt")
     
-    a = testLongChemin('1', 50)
+    a = testLongChemin('23',200)
     print(a)
 main()

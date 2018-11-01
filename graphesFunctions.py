@@ -301,35 +301,37 @@ def trouverCheminsPossibles(noeud_precedent, noeud_courant, temps_decharge_80, g
 
     # return [chemin, temps_actuel]
 
-def testLongChemin(origine, timeTo20, visited = [], currentTime = 0, path = []):
+def testLongChemin(origine, tempsAutonomie, noeudsVisites = [], tempsTotal = 0, chemin = []):
+
+    if not noeudsVisites:
+        noeudsVisites.append(origine)
+    if not chemin:
+        chemin.append(origine)
     
-    visited.append(origine)
+    cheminsPotentiels = []
 
-    newVisi = visited
-
-    cheminsTemp = []
-
-    if currentTime > timeTo20:
-        return (path, currentTime)
-    else:
-        voisins = list(GrapheCLSCs[origine].keys())
-        voisinsToVisit = [node for node in voisins if node not in visited]
-        
-        for voisin in voisinsToVisit:
-            newTime = currentTime + GrapheCLSCs[origine][voisin]
-            newPath = path
-            newPath.append(voisin)
-            cheminsTemp.append(testLongChemin(voisin,timeTo20,newVisi,newTime,newPath))
+    voisins = list(GrapheCLSCs[origine].keys())
+    voisinsAVisiter = [noeud for noeud in voisins if noeud not in noeudsVisites and GrapheCLSCs[origine][noeud] + tempsTotal < tempsAutonomie]
     
-    timeMax = 0
-    resultatChemin = []
+    if (not voisinsAVisiter):
+        return (chemin, tempsTotal)
+    
+    for voisin in voisinsAVisiter:
+        if (tempsAutonomie > GrapheCLSCs[origine][voisin] + tempsTotal):
+                
+            copytempsTotal = tempsTotal + GrapheCLSCs[origine][voisin]
+                
+            copychemin = chemin[:]
+            copychemin.append(voisin)
 
-    for chemins, time in cheminsTemp:
-        if time > timeMax:
-            timeMax = time
-            resultatChemin = chemins
+            copynoeudsVisites = noeudsVisites[:]
+            copynoeudsVisites.append(voisin)
+    
+            cheminsPotentiels.append(testLongChemin(voisin, tempsAutonomie, copynoeudsVisites, copytempsTotal, copychemin))
 
-    return(resultatChemin, timeMax)
+    return max(cheminsPotentiels, key = lambda item:item[1])
+
+    
 
 
         
