@@ -301,4 +301,36 @@ def trouverCheminsPossibles(noeud_precedent, noeud_courant, temps_decharge_80, g
 
     # return [chemin, temps_actuel]
 
+def testLongChemin(origine, timeTo20, visited = [], currentTime = 0, path = []):
     
+    visited.append(origine)
+
+    newVisi = visited
+
+    cheminsTemp = []
+
+    if currentTime > timeTo20:
+        return (path, currentTime)
+    else:
+        voisins = list(GrapheCLSCs[origine].keys())
+        voisinsToVisit = [node for node in voisins if node not in visited]
+        
+        for voisin in voisinsToVisit:
+            newTime = currentTime + GrapheCLSCs[origine][voisin]
+            newPath = path
+            newPath.append(voisin)
+            cheminsTemp.append(testLongChemin(voisin,timeTo20,newVisi,newTime,newPath))
+    
+    timeMax = 0
+    resultatChemin = []
+
+    for chemins, time in cheminsTemp:
+        if time > timeMax:
+            timeMax = time
+            resultatChemin = chemins
+
+    return(resultatChemin, timeMax)
+
+
+        
+            

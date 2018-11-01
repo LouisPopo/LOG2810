@@ -15,8 +15,6 @@ fakeDict = {
 def main():
     creerGraphe("centresLocaux.txt")
     
-    resultat = plusCourtChemin(Risque.haut, '23', '27')
-    lireGraphe()
-    print(resultat)
-    
+    a = testLongChemin('1', 50)
+    print(a)
 main()
