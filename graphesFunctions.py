@@ -29,7 +29,7 @@ def grapheExiste():
 # Parametre : chemin vers le fichier
 # Si le chemin est valide, il cree un Graphe, sinon imprime Erreur
 # Ne retourne Rien
-def creerGraphe( nomFichier):
+def creerGraphe(nomFichier):
     
     BorneRecharge.clear()
     GrapheCLSCs.clear()
@@ -201,6 +201,7 @@ def creerListeChemin(listeTupleCheminTemps):
 
 # Parametres : Risque.type, noeud origine et destination (en string), et Vehicule.Type
 # Retourne [[chemin], temps total]
+<<<<<<< HEAD
 def extraireSousGraphe(categorie_transport, origine, typeVehicule):
     graphe = GrapheCLSCs
     noeudCourant = origine
@@ -211,8 +212,15 @@ def extraireSousGraphe(categorie_transport, origine, typeVehicule):
 
     plusLongChemin = max(chemins_possibles, key=lambda k:chemins_possibles[k][k][1])
     return [chemins_possibles[plusLongChemin][0], chemins_possibles[plusLongChemin][1]]
+=======
+def extraireSousGraphe(risque_transport, origine, type_vehicule):
+    tauxDecharge = dictTauxDecharge[type_vehicule][risque_transport]
+    temps_decharge_80 = 80/tauxDecharge
+>>>>>>> f30c26b4686361a411848a3f593ab9fa9d361e1f
 
+    plusLongChemin = testLongChemin(origine, temps_decharge_80, visited = set(), currentTime = 0, path = [])
 
+<<<<<<< HEAD
 def trouverCheminsPossibles(noeud_precedent, noeudCourant, tempsDecharge80, graphe, chemin_actuel):
     
     for voisin in graphe[noeudCourant][voisin]:
@@ -290,30 +298,33 @@ def testLongChemin(origine, tempsAutonomie, noeudsVisites = [], tempsTotal = 0, 
         chemin.append(origine)
     
     cheminsPotentiels = []
+=======
+    return plusLongChemin[0]
+    
+
+def testLongChemin(origine, timeTo20, visited = set(), currentTime = 0, path = []):
+    #print(origine, visited)
+    cheminsTemp = []
+
+    visited.add(origine)
+
+    path.append(origine)
+>>>>>>> f30c26b4686361a411848a3f593ab9fa9d361e1f
 
     voisins = list(GrapheCLSCs[origine].keys())
-    voisinsAVisiter = [noeud for noeud in voisins if noeud not in noeudsVisites and GrapheCLSCs[origine][noeud] + tempsTotal < tempsAutonomie]
-    
-    if (not voisinsAVisiter):
-        return (chemin, tempsTotal)
-    
-    for voisin in voisinsAVisiter:
-        if (tempsAutonomie > GrapheCLSCs[origine][voisin] + tempsTotal):
-                
-            copytempsTotal = tempsTotal + GrapheCLSCs[origine][voisin]
-                
-            copychemin = chemin[:]
-            copychemin.append(voisin)
-
-            copynoeudsVisites = noeudsVisites[:]
-            copynoeudsVisites.append(voisin)
-    
-            cheminsPotentiels.append(testLongChemin(voisin, tempsAutonomie, copynoeudsVisites, copytempsTotal, copychemin))
-
-    return max(cheminsPotentiels, key = lambda item:item[1])
+    voisinsToVisit = [node for node in voisins if node not in visited]
 
     
+    if all(timeTo20 < GrapheCLSCs[origine][voisin] + currentTime for voisin in voisinsToVisit):
+        return (path, currentTime)
 
+    for voisin in [node for node in voisins if node not in visited]:
+        if currentTime + GrapheCLSCs[origine][voisin] < timeTo20:
+            
+            copyCurrentTime = currentTime
+            copyCurrentTime += GrapheCLSCs[origine][voisin]
+            cheminsTemp.append(testLongChemin(voisin, timeTo20, visited, copyCurrentTime, path.copy()))
 
+    return max(cheminsTemp, key=lambda item:item[1])
         
             
