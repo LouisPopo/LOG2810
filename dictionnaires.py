@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Vehicule(Enum):
     NI_MH = 'NI-MH'
     LI_ion = 'LI-ion'
@@ -9,7 +10,9 @@ class Risque(Enum):
     moyen = 'Moyen Risque'
     haut = 'Haut Risque'
 
-taux_decharge = {
+#Dictionnaires pour graphesFonctions.py
+
+dictTauxDecharge = {
     Vehicule.NI_MH : {
         Risque.faible : (6/60),
         Risque.moyen : (12/60),
@@ -22,3 +25,12 @@ taux_decharge = {
         Risque.haut : (30/60)
     }
 }
+
+#Dictionnaires pour le Menu
+
+dictVehicule = {'1' : Vehicule.NI_MH,
+                '2' : Vehicule.LI_ion}
+
+dictRisque = {'1' : Risque.faible,
+              '2' : Risque.moyen,
+              '3' : Risque.haut}
