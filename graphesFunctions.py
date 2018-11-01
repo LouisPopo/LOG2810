@@ -228,7 +228,7 @@ def extraireSousGraphe(risque_transport, origine, type_vehicule):
 
     return plusLongChemin[0]
     
-    
+
 def testLongChemin(origine, timeTo20, visited = set(), currentTime = 0, path = []):
     #print(origine, visited)
     cheminsTemp = []

@@ -1,4 +1,8 @@
 {
     "python.linting.enabled": true,
+<<<<<<< HEAD
     "python.pythonPath": "/anaconda3/bin/python"
+=======
+    "python.pythonPath": "/usr/local/bin/python3"
+>>>>>>> 2e38191bd53a3b99f1805047e5b0bbff9830c8d1
 }
