@@ -204,23 +204,22 @@ def extraireSousGraphe(risque_transport, origine, type_vehicule):
     tauxDecharge = dictTauxDecharge[type_vehicule][risque_transport]
     temps_decharge_80 = 80/tauxDecharge
 
-    plusLongChemin = testLongChemin(origine, temps_decharge_80, visited = set(), currentTime = 0, path = [])
+    plusLongChemin = testLongChemin(origine, temps_decharge_80, visited = [], currentTime = 0, path = [])
 
     return plusLongChemin[0]
     
 
-def testLongChemin(origine, timeTo20, visited = set(), currentTime = 0, path = []):
+def testLongChemin(origine, timeTo20, visited = [], currentTime = 0, path = []):
     #print(origine, visited)
     cheminsTemp = []
 
-    visited.add(origine)
+    visited.append(origine)
 
     path.append(origine)
 
     voisins = list(GrapheCLSCs[origine].keys())
     voisinsToVisit = [node for node in voisins if node not in visited]
 
-    
     if all(timeTo20 < GrapheCLSCs[origine][voisin] + currentTime for voisin in voisinsToVisit):
         return (path, currentTime)
 
@@ -231,6 +230,7 @@ def testLongChemin(origine, timeTo20, visited = set(), currentTime = 0, path = [
             copyCurrentTime += GrapheCLSCs[origine][voisin]
             cheminsTemp.append(testLongChemin(voisin, timeTo20, visited, copyCurrentTime, path.copy()))
 
-    return max(cheminsTemp, key=lambda item:item[1])
-        
-            
+    if len(cheminsTemp) == 0:
+        return [(0), 0]
+    else:
+        return max(cheminsTemp, key=lambda item:item[1])
