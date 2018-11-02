@@ -124,7 +124,7 @@ def ExtraireSousGraphe():
         #Si le chemin a extraire existe, on affiche chaque parametre du dit chemin. 
         #Sinon, on affiche que le chemin voulu est impossible et on retourne au menu
         if sousGraphe is not None:
-            print("allo")   #affichage?
+            print("\nChemin: " + str(sousGraphe))  
         else:
             print("Ce sous-graphe n'existe pas!")
         menu()
