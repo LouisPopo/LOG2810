@@ -202,41 +202,24 @@ def extraireSousGraphe(risque_transport, origine, type_vehicule):
     tauxDecharge = dictTauxDecharge[type_vehicule][risque_transport]
     temps_decharge_80 = 80/tauxDecharge
 
-<<<<<<< HEAD
-    plusLongChemin = testLongChemin(origine, temps_decharge_80, visited = [], currentTime = 0, path = [])
-=======
     plusLongChemin = trouverPlusLongChemin(origine, temps_decharge_80, noeudsVisites = set(), tempsTotal = 0, chemin = [])
->>>>>>> 8676c76981a2bdba4d1b418813f29fbb1663c902
 
     return plusLongChemin[0]
     
 
-<<<<<<< HEAD
-def testLongChemin(origine, timeTo20, visited = [], currentTime = 0, path = []):
-    #print(origine, visited)
-    cheminsTemp = []
-
-    visited.append(origine)
-=======
 def trouverPlusLongChemin(origine, tempsJusqua20, noeudsVisites = set(), tempsTotal = 0, chemin = []):
     cheminsTemp = []
 
     noeudsVisites.add(origine)
->>>>>>> 8676c76981a2bdba4d1b418813f29fbb1663c902
 
     chemin.append(origine)
 
     voisins = list(GrapheCLSCs[origine].keys())
     voisinsAVisiter = [noeud for noeud in voisins if noeud not in noeudsVisites]
 
-<<<<<<< HEAD
-    if all(timeTo20 < GrapheCLSCs[origine][voisin] + currentTime for voisin in voisinsToVisit):
-        return (path, currentTime)
-=======
     
     if all(tempsJusqua20 < GrapheCLSCs[origine][voisin] + tempsTotal for voisin in voisinsAVisiter):
         return (chemin, tempsTotal)
->>>>>>> 8676c76981a2bdba4d1b418813f29fbb1663c902
 
     for voisin in [noeud for noeud in voisins if noeud not in noeudsVisites]:
         if tempsTotal + GrapheCLSCs[origine][voisin] < tempsJusqua20:
