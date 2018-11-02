@@ -29,7 +29,7 @@ def grapheExiste():
 # Parametre : chemin vers le fichier
 # Si le chemin est valide, il cree un Graphe, sinon imprime Erreur
 # Ne retourne Rien
-def creerGraphe( nomFichier):
+def creerGraphe(nomFichier):
     
     BorneRecharge.clear()
     GrapheCLSCs.clear()
@@ -59,157 +59,138 @@ def creerGraphe( nomFichier):
 # Si le GrapheCLSCs existe, il l'imprime
 def lireGraphe():
     print("Noeud : { Voisin_1 : duree, Voisin_2 : duree, ... }")
-    for node in GrapheCLSCs:
-        print (str(node) + " : " + str(GrapheCLSCs[node]))
+    for noeud in GrapheCLSCs:
+        print (str(noeud) + " : " + str(GrapheCLSCs[noeud]))
 
 # Parametres : Risque.type, le noeud d'origine et la destinatinons (en string)
 # Retourne un dictionnaire : (Chemin : [liste], TempsTotal : int, Batterie : int, Vehicule : Vehicule)
 # OU None si impossible
-def plusCourtChemin(risque_transport, origine, destination, type_vehicule = Vehicule.NI_MH):
+def plusCourtChemin(risqueTransport, origine, destination, typeVehicule = Vehicule.NI_MH):
 
-    chemin, temps_chemin = algoDijkstra(origine, destination)
+    chemin, tempsChemin = algoDijkstra(origine, destination)
 
-    tauxDecharge = dictTauxDecharge[type_vehicule][risque_transport]
+    tauxDecharge = dictTauxDecharge[typeVehicule][risqueTransport]
+    tempsDecharge80 = 80/tauxDecharge
+    niveauBatterieFinal = BATTERIE_PLEINE - tauxDecharge*tempsChemin
 
-    temps_decharge_80 = 80/tauxDecharge
-    niveau_batterie_finale = BATTERIE_PLEINE - tauxDecharge*temps_chemin
-
-    chemin_trouve = False
-    
+    cheminTrouve = False
     resultat = None
 
     # Si la voiture se decharge avant d'arriver
-    if(temps_chemin > temps_decharge_80):
+    if(tempsChemin > tempsDecharge80):
         #On parcourt le chemin dans le sens inverse, et on trouve la premiere CLSC, ou on peut se recharger
-        for clsc,temps_a_partir_origine in chemin[::-1]:
-            if (temps_a_partir_origine < temps_decharge_80 and BorneRecharge[clsc]):
+        for clsc,tempsAPartirDOrigine in chemin[::-1]:
+            if (tempsAPartirDOrigine < tempsDecharge80 and BorneRecharge[clsc]):
                 print("On recharge a la borne : " + str(clsc))
-                temps_ici_destination = temps_chemin - temps_a_partir_origine
-                niveau_batterie_finale = BATTERIE_PLEINE - tauxDecharge*temps_ici_destination
-                temps_chemin += TEMPS_RECHARGE
-                chemin_trouve = True
-                break
+                
+                tempsBorneJusquaDestination = tempsChemin - tempsAPartirDOrigine
+                batterieFinale = BATTERIE_PLEINE - tempsBorneJusquaDestination*tauxDecharge
+                
+                if(batterieFinale > 20):
+                    tempsChemin += TEMPS_RECHARGE
+                    cheminTrouve = True
+                    break
+    # Sinon, il est possible de faire le trajet sans recharger
     else:
-        chemin_trouve = True
+        cheminTrouve = True
     
     resultat = {
         'Chemin' : creerListeChemin(chemin),
-        'TempsTotal' : temps_chemin,
-        'Batterie' : niveau_batterie_finale,
-        'Vehicule' : type_vehicule
+        'TempsTotal' : tempsChemin,
+        'Batterie' : niveauBatterieFinal,
+        'Vehicule' : typeVehicule
     }
 
     # Si la voiture se decharge en chemin, et qu'il n'y a pas de Bornes,
     # On calcule le plus court chemin de origine jusqua toutes les bornes de recharge ET
     # le plus cours chemin de toutes les bornes de recharge jusqu'a destination
-    if(not chemin_trouve):
+    if(not cheminTrouve):
         print('Chemin le plus court ne contient pas de bornes de recharge')
-        resultat = trouverPlusCourtCheminAvecBorneRecharge(temps_decharge_80, origine, destination, tauxDecharge)
-        resultat['Vehicule'] = type_vehicule
-    # doit retourner qqchose ici ----
+        resultat = trouverPlusCourtCheminAvecBorneRecharge(tempsDecharge80, origine, destination, tauxDecharge)
+        if resultat != None:
+            resultat['Vehicule'] = typeVehicule
+            cheminTrouve = True
 
     # Si on ne trouve toujours pas de chemin possible avec le vehicule NI-MH, on essaye avec
     # un vehicule LI-ion
-    if(resultat == None and type_vehicule == Vehicule.NI_MH):
-        plusCourtChemin(risque_transport,origine,destination,Vehicule.LI_ion)
+    if(not cheminTrouve and typeVehicule == Vehicule.NI_MH):
+        resultat = plusCourtChemin(risqueTransport,origine,destination,Vehicule.LI_ion)
 
     return resultat
 
 # Retourne un tuple (set [noeud : temps a partir d'origine], temps total)
 def algoDijkstra(origine, destination):
-    # le tuple est (previous_node, time_from_origin)
-    plus_courts_chemins = {origine : (None, 0)}
+    # dict = {noeudCourant (noeudPrecedent, tempsAPartirOrigine)
+    plusCourtsChemins = {origine : (None, 0)}
     
-    noeud_courant = origine
-    noeuds_visites = set()
+    noeudCourant = origine
+    noeudVisites = set()
 
-    while noeud_courant != destination:
-        noeuds_visites.add(noeud_courant)
+    while noeudCourant != destination:
+        noeudVisites.add(noeudCourant)
 
-        temps_origine_a_courant = plus_courts_chemins[noeud_courant][1]
+        tempsOrigineJusquaNoeudCourant = plusCourtsChemins[noeudCourant][1]
 
         #on parcourt tous les voisins du noeud courant
-        for voisin in GrapheCLSCs[noeud_courant]:
-            temps_origine_a_voisin = GrapheCLSCs[noeud_courant][voisin] + temps_origine_a_courant
+        for voisin in GrapheCLSCs[noeudCourant]:
+            tempsOrigineJusquaVoisin = GrapheCLSCs[noeudCourant][voisin] + tempsOrigineJusquaNoeudCourant
 
-            if voisin not in plus_courts_chemins:
-                plus_courts_chemins[voisin] = (noeud_courant, temps_origine_a_voisin)
+            if voisin not in plusCourtsChemins:
+                plusCourtsChemins[voisin] = (noeudCourant, tempsOrigineJusquaVoisin)
             else:
-                temps_minimal_actuel = plus_courts_chemins[voisin][1]
-                if temps_origine_a_voisin < temps_minimal_actuel:
-                    plus_courts_chemins[voisin] = (noeud_courant,temps_origine_a_voisin)
+                tempsActuel = plusCourtsChemins[voisin][1]
+                if tempsOrigineJusquaVoisin < tempsActuel:
+                    plusCourtsChemins[voisin] = (noeudCourant,tempsOrigineJusquaVoisin)
         
-        prochains_noeuds = {node : plus_courts_chemins[node] for node in plus_courts_chemins if node not in noeuds_visites }
+        prochainsNoeuds = {noeud : plusCourtsChemins[noeud] for noeud in plusCourtsChemins if noeud not in noeudVisites }
 
-        noeud_courant = min(prochains_noeuds, key=lambda k:prochains_noeuds[k][1])
-
+        noeudCourant = min(prochainsNoeuds, key=lambda k:prochainsNoeuds[k][1])
 
     chemin=[]
-    #noeud_courant = destination
-    #chemin = set tuples(node, time from origin)
-    # On parcourt le dictionnaire 'plus_courts_chemins' : en partant de 'destination' et en allant ensuite au noeud present dans le tuple
-    while noeud_courant is not None:
-        chemin.append((noeud_courant, plus_courts_chemins[noeud_courant][1]))
-        prochain_noeud = plus_courts_chemins[noeud_courant][0]
-        noeud_courant = prochain_noeud
+    # noeudCourant = destination
+    # chemin = set tuples(noeud, time from origin)
+    # On parcourt le dictionnaire 'plusCourtsChemins' : en partant de 'destination' et en allant ensuite au noeud present dans le tuple
+    while noeudCourant is not None:
+        chemin.append((noeudCourant, plusCourtsChemins[noeudCourant][1]))
+        prochainNoeud = plusCourtsChemins[noeudCourant][0]
+        noeudCourant = prochainNoeud
 
     #on inverse l'ordre du tableau
     chemin = chemin[::-1]
-    return (chemin, plus_courts_chemins[destination][1])
+    return (chemin, plusCourtsChemins[destination][1])
 
 # Retourne un dictionnaire (Chemin : [liste], TempsTotal : int, Batterie : int)
 # OU None si impossible
-def trouverPlusCourtCheminAvecBorneRecharge(temps_decharge_80, origine, destination, tauxDecharge):
+def trouverPlusCourtCheminAvecBorneRecharge(tempsDecharge80, origine, destination, tauxDecharge):
     # On prend toutes les CLSCs qui ont des bornes de recharge
-    idsCLSCsAvecBorne = list(filter(BorneRecharge.get, BorneRecharge))
+    idsCLSCsAvecBorne = set(filter(BorneRecharge.get, BorneRecharge))
      
     cheminsOrigineBornes = []
 
     for clsc in idsCLSCsAvecBorne:
         if clsc != origine:
             chemin = algoDijkstra(origine,clsc)
-            if(chemin[1] < temps_decharge_80):
+            if(chemin[1] < tempsDecharge80):
                 cheminsOrigineBornes.append(chemin)
 
-
-    cheminsOrigineDestinationAvecBorne = []
-
-    for cheminJusquaBorneEtTemps in cheminsOrigineBornes:
-        idBorne = cheminJusquaBorneEtTemps[0][-1][0]    # On prend le premier element du tuple, qui est une liste, 
-                                                        # de laquelle on prend le dernier element, qui est un autre tuple 
-                                                        # (noeud, temps a partir d'origine ), duquel on prend le noeud seulement
-
-        borneJusquaDestination = algoDijkstra(idBorne,destination)
-        if(borneJusquaDestination[1] < temps_decharge_80):
-            cheminsOrigineDestinationAvecBorne.append((cheminJusquaBorneEtTemps,borneJusquaDestination))
-
-    
+    resultat = None
     tempsMinimal = float('inf')
 
-    # A ce moment, cheminsOrigineDestinationAvecBorne est une liste de tuple
-
-    resultat = None
-
-    for cheminTotal in cheminsOrigineDestinationAvecBorne:
-        tempsOrigineBorne = cheminTotal[0][1]
-        tempsBorneDestination = cheminTotal[1][1]
-        tempsTotal = tempsOrigineBorne + tempsBorneDestination + TEMPS_RECHARGE
-
-        if tempsBorneDestination < temps_decharge_80 and tempsTotal < tempsMinimal:
-            tempsMinimal = tempsTotal
-            cheminOrigineBorne = creerListeChemin(cheminTotal[0][0])[:-1]
-            cheminBorneDestination = creerListeChemin(cheminTotal[1][0])
-            cheminTotal = cheminOrigineBorne + cheminBorneDestination
-            niveauBatterie = BATTERIE_PLEINE - tempsBorneDestination*tauxDecharge
-            resultat = {
-                'Chemin' : cheminTotal,
-                'TempsTotal' : tempsTotal,
-                'Batterie' : niveauBatterie
-            }
+    for cheminJusquaBorne, tempsJusquaBorne in cheminsOrigineBornes:
+        idBorne = cheminJusquaBorne[-1][0]              # On prend le dernier element de la liste, qui est un tuple 
+                                                        # (noeud, temps a partir d'origine ), duquel on prend le noeud seulement
+        cheminBorneJusquaDestination, tempsBorneJusquaDestination = algoDijkstra(idBorne,destination)
         
+        if(tempsBorneJusquaDestination < tempsDecharge80) and (tempsJusquaBorne + tempsBorneJusquaDestination < tempsMinimal):
+            tempsMinimal = tempsJusquaBorne + tempsBorneJusquaDestination
+            resultat = {
+                'Chemin' : creerListeChemin(cheminJusquaBorne) + creerListeChemin(cheminBorneJusquaDestination),
+                'TempsTotal' : tempsJusquaBorne + tempsBorneJusquaDestination + TEMPS_RECHARGE,
+                'Batterie' : BATTERIE_PLEINE - tempsBorneJusquaDestination*tauxDecharge
+            }
 
     return(resultat)
-
+    
 # Transfomre une liste de Tuples(CLSC, tempsAPartirOrignie) en liste de [CLSCs]
 def creerListeChemin(listeTupleCheminTemps):
     resultat = []
@@ -217,120 +198,38 @@ def creerListeChemin(listeTupleCheminTemps):
         resultat.append(noeudTemps[0])
     return resultat
 
-
 # Parametres : Risque.type, noeud origine et destination (en string), et Vehicule.Type
 # Retourne [[chemin], temps total]
-def extraireSousGraphe(categorie_transport, origine, type_vehicule):
-    graphe = GrapheCLSCs
-    noeud_courant = origine
-    noeud_precedent = None
-    temps_decharge_80 = 80/dictTauxDecharge[type_vehicule][categorie_transport]
+def extraireSousGraphe(risque_transport, origine, type_vehicule):
+    tauxDecharge = dictTauxDecharge[type_vehicule][risque_transport]
+    temps_decharge_80 = 80/tauxDecharge
 
-    chemins_possibles = trouverCheminsPossibles(noeud_precedent, noeud_courant, temps_decharge_80, graphe, 0)
+    plusLongChemin = trouverPlusLongChemin(origine, temps_decharge_80, noeudsVisites = set(), tempsTotal = 0, chemin = [])
 
-    plusLongChemin = max(chemins_possibles, key=lambda k:chemins_possibles[k][k][1])
-    return [chemins_possibles[plusLongChemin][0], chemins_possibles[plusLongChemin][1]]
-
-
-def trouverCheminsPossibles(noeud_precedent, noeud_courant, temps_decharge_80, graphe, chemin_actuel):
+    return plusLongChemin[0]
     
-    for voisin in graphe[noeud_courant][voisin]:
-        chemins_possibles = {} #{0 : [[1,2,3,4], temps], 1: [[5,6,7], temps2]}
-        voisins = []
-        #Met tous les voisins dans voisins[] et enlever les noeuds deja visites
-        
-        for voisin in graphe[noeud_courant][voisin]:
-            voisins.append(voisin)
-        for voisin in voisins:
-            if voisin in chemins_possibles[chemin_actuel][0]:
-                voisins.remove(voisin)
-        
-        if voisins:
-            for voisin in voisins:
-                if (chemins_possibles[chemin_actuel][1] <= temps_decharge_80):
-                    chemins_possibles[chemin_actuel][0].append(noeud_courant)
-                    chemins_possibles[chemin_actuel][1] += graphe[noeud_precedent][noeud_courant]
-                    noeud_precedent = noeud_courant
-                    noeud_courant = voisin
-        else:
-            chemin_actuel += 1
-    
-    return chemins_possibles
 
-
-
-    # graphe = GrapheCLSCs
-    # plus_longs_chemins = {origine : (None, 0)}
-    # noeud_courant = origine
-    # noeuds_visites = set()
-
-    # temps_decharge_80 = 80/taux_decharge[type_vehicule][categorie_transport]
-
-    # while(plus_longs_chemins[noeud_courant][1] < temps_decharge_80):
-    #     noeuds_visites.add(noeud_courant)
-
-    #     temps_actuel = plus_longs_chemins[noeud_courant][1]
-
-    #     #on parcourt tous les voisins du noeud courant
-    #     for voisin in graphe[noeud_courant]:
-    #         temps_origine_a_voisin = graphe[noeud_courant][voisin] + temps_actuel
-
-    #         if voisin not in plus_longs_chemins:
-    #             plus_longs_chemins[voisin] = (noeud_courant, temps_origine_a_voisin)
-    #         else:
-    #             temps_maximal_actuel = plus_longs_chemins[voisin][1]
-    #             if temps_origine_a_voisin > temps_maximal_actuel:
-    #                 if plus_longs_chemins[voisin][0] not in noeuds_visites:
-    #                     if plus_longs_chemins[voisin][0] != None:
-    #                         plus_longs_chemins[voisin] = (noeud_courant, temps_origine_a_voisin)
-
-    #     prochains_noeuds = {noeud : plus_longs_chemins[noeud] for noeud in plus_longs_chemins if noeud not in noeuds_visites }
-    #     if(prochains_noeuds):
-    #         noeud_courant = max(prochains_noeuds, key=lambda k:prochains_noeuds[k][1])
-    #     else:
-    #         break
-
-    # chemin = []
-
-    # while noeud_courant is not None:
-    #     chemin.append((noeud_courant, plus_longs_chemins[noeud_courant][1]))
-    #     prochain_noeud = plus_longs_chemins[noeud_courant][0]
-    #     noeud_courant = prochain_noeud
-
-    # chemin = chemin[::-1]
-
-    # return [chemin, temps_actuel]
-
-def testLongChemin(origine, timeTo20, visited = [], currentTime = 0, path = []):
-    
-    visited.append(origine)
-
-    newVisi = visited
-
+def trouverPlusLongChemin(origine, tempsJusqua20, noeudsVisites = set(), tempsTotal = 0, chemin = []):
     cheminsTemp = []
 
-    if currentTime > timeTo20:
-        return (path, currentTime)
-    else:
-        voisins = list(GrapheCLSCs[origine].keys())
-        voisinsToVisit = [node for node in voisins if node not in visited]
-        
-        for voisin in voisinsToVisit:
-            newTime = currentTime + GrapheCLSCs[origine][voisin]
-            newPath = path
-            newPath.append(voisin)
-            cheminsTemp.append(testLongChemin(voisin,timeTo20,newVisi,newTime,newPath))
+    noeudsVisites.add(origine)
+
+    chemin.append(origine)
+
+    voisins = list(GrapheCLSCs[origine].keys())
+    voisinsAVisiter = [noeud for noeud in voisins if noeud not in noeudsVisites]
+
     
-    timeMax = 0
-    resultatChemin = []
+    if all(tempsJusqua20 < GrapheCLSCs[origine][voisin] + tempsTotal for voisin in voisinsAVisiter):
+        return (chemin, tempsTotal)
 
-    for chemins, time in cheminsTemp:
-        if time > timeMax:
-            timeMax = time
-            resultatChemin = chemins
+    for voisin in [noeud for noeud in voisins if noeud not in noeudsVisites]:
+        if tempsTotal + GrapheCLSCs[origine][voisin] < tempsJusqua20:
+            
+            copieTempsTotal = tempsTotal
+            copieTempsTotal += GrapheCLSCs[origine][voisin]
+            cheminsTemp.append(trouverPlusLongChemin(voisin, tempsJusqua20, noeudsVisites, copieTempsTotal, chemin.copy()))
 
-    return(resultatChemin, timeMax)
-
-
+    return max(cheminsTemp, key=lambda item:item[1])
         
             

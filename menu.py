@@ -141,7 +141,7 @@ def Quitter():
 def menu():
 
     #Dictionnaire des options possibles
-    options = {'a' : MiseAJour,
+    options = { 'a' : MiseAJour,
                 'b' : CheminPlusCourtSecuritaire,
                 'c' : ExtraireSousGraphe,
                 'd' : Quitter,
