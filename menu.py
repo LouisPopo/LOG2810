@@ -2,8 +2,6 @@ from graphesFunctions import *
 from enum import Enum
 from dictionnaires import *
 
-#TODO: print de nabs
-
 #Affichage des choix
 def Affichage():
     print(
