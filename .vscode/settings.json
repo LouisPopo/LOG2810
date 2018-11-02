@@ -1,12 +1,5 @@
 {
     "python.linting.enabled": true,
-<<<<<<< HEAD
     "python.pythonPath": "C:\\Users\\Louis Popovic\\Anaconda\\envs\\py37\\python.exe"
-=======
-<<<<<<< HEAD
-    "python.pythonPath": "/anaconda3/bin/python"
-=======
-    "python.pythonPath": "/usr/local/bin/python3"
->>>>>>> 2e38191bd53a3b99f1805047e5b0bbff9830c8d1
->>>>>>> f30c26b4686361a411848a3f593ab9fa9d361e1f
+
 }

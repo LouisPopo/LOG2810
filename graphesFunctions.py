@@ -204,32 +204,31 @@ def extraireSousGraphe(risque_transport, origine, type_vehicule):
     tauxDecharge = dictTauxDecharge[type_vehicule][risque_transport]
     temps_decharge_80 = 80/tauxDecharge
 
-    plusLongChemin = testLongChemin(origine, temps_decharge_80, visited = set(), currentTime = 0, path = [])
+    plusLongChemin = trouverPlusLongChemin(origine, temps_decharge_80, noeudsVisites = set(), tempsTotal = 0, chemin = [])
 
     return plusLongChemin[0]
     
 
-def testLongChemin(origine, timeTo20, visited = set(), currentTime = 0, path = []):
-    #print(origine, visited)
+def trouverPlusLongChemin(origine, tempsJusqua20, noeudsVisites = set(), tempsTotal = 0, chemin = []):
     cheminsTemp = []
 
-    visited.add(origine)
+    noeudsVisites.add(origine)
 
-    path.append(origine)
+    chemin.append(origine)
 
     voisins = list(GrapheCLSCs[origine].keys())
-    voisinsToVisit = [node for node in voisins if node not in visited]
+    voisinsAVisiter = [noeud for noeud in voisins if noeud not in noeudsVisites]
 
     
-    if all(timeTo20 < GrapheCLSCs[origine][voisin] + currentTime for voisin in voisinsToVisit):
-        return (path, currentTime)
+    if all(tempsJusqua20 < GrapheCLSCs[origine][voisin] + tempsTotal for voisin in voisinsAVisiter):
+        return (chemin, tempsTotal)
 
-    for voisin in [node for node in voisins if node not in visited]:
-        if currentTime + GrapheCLSCs[origine][voisin] < timeTo20:
+    for voisin in [noeud for noeud in voisins if noeud not in noeudsVisites]:
+        if tempsTotal + GrapheCLSCs[origine][voisin] < tempsJusqua20:
             
-            copyCurrentTime = currentTime
-            copyCurrentTime += GrapheCLSCs[origine][voisin]
-            cheminsTemp.append(testLongChemin(voisin, timeTo20, visited, copyCurrentTime, path.copy()))
+            copieTempsTotal = tempsTotal
+            copieTempsTotal += GrapheCLSCs[origine][voisin]
+            cheminsTemp.append(trouverPlusLongChemin(voisin, tempsJusqua20, noeudsVisites, copieTempsTotal, chemin.copy()))
 
     return max(cheminsTemp, key=lambda item:item[1])
         
