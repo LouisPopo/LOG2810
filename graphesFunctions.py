@@ -81,7 +81,6 @@ def plusCourtChemin(risqueTransport, origine, destination, typeVehicule = Vehicu
         #On parcourt le chemin dans le sens inverse, et on trouve la premiere CLSC, ou on peut se recharger
         for clsc,tempsAPartirDOrigine in chemin[::-1]:
             if (tempsAPartirDOrigine < tempsDecharge80 and BorneRecharge[clsc]):
-                print("On recharge a la borne : " + str(clsc))
                 
                 tempsBorneJusquaDestination = tempsChemin - tempsAPartirDOrigine
                 batterieFinale = BATTERIE_PLEINE - tempsBorneJusquaDestination*tauxDecharge
@@ -105,7 +104,6 @@ def plusCourtChemin(risqueTransport, origine, destination, typeVehicule = Vehicu
     # On calcule le plus court chemin de origine jusqua toutes les bornes de recharge ET
     # le plus cours chemin de toutes les bornes de recharge jusqu'a destination
     if(not cheminTrouve):
-        print('Chemin le plus court ne contient pas de bornes de recharge')
         resultat = trouverPlusCourtCheminAvecBorneRecharge(tempsDecharge80, origine, destination, tauxDecharge)
         if resultat != None:
             resultat['Vehicule'] = typeVehicule
@@ -204,31 +202,48 @@ def extraireSousGraphe(risque_transport, origine, type_vehicule):
     tauxDecharge = dictTauxDecharge[type_vehicule][risque_transport]
     temps_decharge_80 = 80/tauxDecharge
 
+<<<<<<< HEAD
     plusLongChemin = testLongChemin(origine, temps_decharge_80, visited = [], currentTime = 0, path = [])
+=======
+    plusLongChemin = trouverPlusLongChemin(origine, temps_decharge_80, noeudsVisites = set(), tempsTotal = 0, chemin = [])
+>>>>>>> 8676c76981a2bdba4d1b418813f29fbb1663c902
 
     return plusLongChemin[0]
     
 
+<<<<<<< HEAD
 def testLongChemin(origine, timeTo20, visited = [], currentTime = 0, path = []):
     #print(origine, visited)
     cheminsTemp = []
 
     visited.append(origine)
+=======
+def trouverPlusLongChemin(origine, tempsJusqua20, noeudsVisites = set(), tempsTotal = 0, chemin = []):
+    cheminsTemp = []
 
-    path.append(origine)
+    noeudsVisites.add(origine)
+>>>>>>> 8676c76981a2bdba4d1b418813f29fbb1663c902
+
+    chemin.append(origine)
 
     voisins = list(GrapheCLSCs[origine].keys())
-    voisinsToVisit = [node for node in voisins if node not in visited]
+    voisinsAVisiter = [noeud for noeud in voisins if noeud not in noeudsVisites]
 
+<<<<<<< HEAD
     if all(timeTo20 < GrapheCLSCs[origine][voisin] + currentTime for voisin in voisinsToVisit):
         return (path, currentTime)
+=======
+    
+    if all(tempsJusqua20 < GrapheCLSCs[origine][voisin] + tempsTotal for voisin in voisinsAVisiter):
+        return (chemin, tempsTotal)
+>>>>>>> 8676c76981a2bdba4d1b418813f29fbb1663c902
 
-    for voisin in [node for node in voisins if node not in visited]:
-        if currentTime + GrapheCLSCs[origine][voisin] < timeTo20:
+    for voisin in [noeud for noeud in voisins if noeud not in noeudsVisites]:
+        if tempsTotal + GrapheCLSCs[origine][voisin] < tempsJusqua20:
             
-            copyCurrentTime = currentTime
-            copyCurrentTime += GrapheCLSCs[origine][voisin]
-            cheminsTemp.append(testLongChemin(voisin, timeTo20, visited, copyCurrentTime, path.copy()))
+            copieTempsTotal = tempsTotal
+            copieTempsTotal += GrapheCLSCs[origine][voisin]
+            cheminsTemp.append(trouverPlusLongChemin(voisin, tempsJusqua20, noeudsVisites, copieTempsTotal, chemin.copy()))
 
     if len(cheminsTemp) == 0:
         return [(0), 0]

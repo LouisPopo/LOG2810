@@ -2,8 +2,6 @@ from graphesFunctions import *
 from enum import Enum
 from dictionnaires import *
 
-#TODO: print de nabs
-
 #Affichage des choix
 def Affichage():
     print(
@@ -17,7 +15,6 @@ def Affichage():
 * c) Extraire un sous-graphe                     *
 * d) Quitter                                     *
 **************************************************
-
 '''
     )
 
@@ -28,13 +25,14 @@ def MiseAJour():
     #Controle de l'erreur: On cree le graphe seulement si le fichier existe
     if fichierExiste(grapheMisAJour):
         creerGraphe(grapheMisAJour)
+        print("Mise à jour de la carte!")
     else:
         print ("Le nom de fichier n'existe pas")
     
     #La lecture n'est fait que si le graphe existe
-    if grapheExiste():   
+    if grapheExiste(): 
+        print("Graphe présent:")  
         lireGraphe()                       
-        print("Mise à jour de la carte!")
     else:
         print ("Le graphe n'existe pas")
 
@@ -79,9 +77,9 @@ def CheminPlusCourtSecuritaire():
         #affiche que le chemin est impossible et on retourne au menu
         if chemin is not None:
             print("\nChemin: " + str(chemin['Chemin'])) 
-            print("Temps: " + str(chemin['TempsTotal']))
+            print("Temps: " + str(chemin['TempsTotal']) + " minutes")
             print("Type de véhicule: " + str(chemin['Vehicule']))
-            print("Niveau de batterie final: " + str(chemin['Batterie']))   
+            print("Niveau de batterie final: " + str(chemin['Batterie']) + " %")   
         else:
             print("Ce chemin n'est pas possible!")
         menu()
@@ -124,7 +122,7 @@ def ExtraireSousGraphe():
         #Si le chemin a extraire existe, on affiche chaque parametre du dit chemin. 
         #Sinon, on affiche que le chemin voulu est impossible et on retourne au menu
         if sousGraphe is not None:
-            print("allo")   #affichage?
+            print("\nChemin: " + str(sousGraphe))  
         else:
             print("Ce sous-graphe n'existe pas!")
         menu()
@@ -141,7 +139,7 @@ def Quitter():
 def menu():
 
     #Dictionnaire des options possibles
-    options = {'a' : MiseAJour,
+    options = { 'a' : MiseAJour,
                 'b' : CheminPlusCourtSecuritaire,
                 'c' : ExtraireSousGraphe,
                 'd' : Quitter,

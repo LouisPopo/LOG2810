@@ -1,18 +1,7 @@
-from graphesFunctions import *
-from menu import menu
-from dictionnaires import *
-
-GrapheCLSCs = None
-
-fakeDict = {
-    'A' : {'B':3,'C':2},
-    'B' : {'A':3,'C':6,'F':4},
-    'C' : {'A':5, 'B':3,'F':8},
-    'D' : {'F':12},
-    'E' : {'B':4,'D':1}
-}
+from menu import *
 
 def main():
+<<<<<<< HEAD
     creerGraphe("centresLocaux.txt")
     #a = extraireSousGraphe(Risque.haut, "2", Vehicule.NI_MH)
     #b = testLongChemin("2", 100)
@@ -25,4 +14,8 @@ def main():
                 print(str(x) + " : " + str(vehicule) + " : " + str(risque))
                 a = extraireSousGraphe(risque, str(x), vehicule)
                 print (a)
+=======
+    menu()
+    
+>>>>>>> 8676c76981a2bdba4d1b418813f29fbb1663c902
 main()
