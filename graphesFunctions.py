@@ -81,7 +81,6 @@ def plusCourtChemin(risqueTransport, origine, destination, typeVehicule = Vehicu
         #On parcourt le chemin dans le sens inverse, et on trouve la premiere CLSC, ou on peut se recharger
         for clsc,tempsAPartirDOrigine in chemin[::-1]:
             if (tempsAPartirDOrigine < tempsDecharge80 and BorneRecharge[clsc]):
-                print("On recharge a la borne : " + str(clsc))
                 
                 tempsBorneJusquaDestination = tempsChemin - tempsAPartirDOrigine
                 batterieFinale = BATTERIE_PLEINE - tempsBorneJusquaDestination*tauxDecharge
@@ -105,7 +104,6 @@ def plusCourtChemin(risqueTransport, origine, destination, typeVehicule = Vehicu
     # On calcule le plus court chemin de origine jusqua toutes les bornes de recharge ET
     # le plus cours chemin de toutes les bornes de recharge jusqu'a destination
     if(not cheminTrouve):
-        print('Chemin le plus court ne contient pas de bornes de recharge')
         resultat = trouverPlusCourtCheminAvecBorneRecharge(tempsDecharge80, origine, destination, tauxDecharge)
         if resultat != None:
             resultat['Vehicule'] = typeVehicule
